@@ -1,0 +1,1763 @@
+USE [KCSDB]
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteBrandLogo]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[DeleteBrandLogo]
+(
+@Id int
+)
+as 
+begin
+if  exists (Select * From BrandLogoMaster Where BrandLogoId=@Id and IsActive=1)
+begin
+Update BrandLogoMaster set IsActive=0 where BrandLogoId=@Id
+Select @Id
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteCategoryMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create proc [dbo].[DeleteCategoryMaster]
+(
+@Id int
+)
+as 
+begin
+if  exists (Select * From CategoryMaster Where CategoryId=@Id)
+begin
+Update CategoryMaster set IsActive=0 where CategoryId=@Id
+Select CategoryId From CategoryMaster Where CategoryId=@Id
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteColorMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[DeleteColorMaster]  
+(  
+@Id int,
+@ModifiedBy int
+)  
+as   
+begin  
+if  exists (Select * From ColorMaster Where ColorId=@Id and IsActive=1)  
+begin  
+Update ColorMaster set IsActive=0,ModifiedBy=@ModifiedBy,ModifiedOn=GETDATE() where ColorId=@Id and IsActive=1  
+Select @Id  
+end  
+else  
+begin  
+Select -1  
+end  
+end
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteContactUs]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create proc [dbo].[DeleteContactUs]
+(
+@ContactId int
+)
+as 
+begin
+if  exists (Select * From ContactUs Where ContactId=@ContactId)
+begin
+Update ContactUs set IsActive=0 where ContactId=@ContactId
+Select ContactId From ContactUs Where ContactId=@ContactId
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteCustomerMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create proc [dbo].[DeleteCustomerMaster]
+(
+@CustomerId int
+)
+as 
+begin
+if  exists (Select * From CustomerMaster Where CustomerId=@CustomerId)
+begin
+Update CustomerMaster set IsActive=0 where CustomerId=@CustomerId
+Select CustomerId From CustomerMaster Where CustomerId=@CustomerId
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteProductMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[DeleteProductMaster]
+(
+@Id int
+)
+as 
+begin
+if  exists (Select * From ProductMaster Where ProductId=@Id and IsActive=1)
+begin
+Update ProductMaster set IsActive=0 where ProductId=@Id and IsActive=1
+Select @Id
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteProductPictureMapping]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create proc [dbo].[DeleteProductPictureMapping]
+(
+@Id int
+)
+as 
+begin
+if  exists (Select * From ProductPictureMapping Where ProductId=@Id)
+begin
+Update ProductPictureMapping set IsActive=0 where ProductId=@Id
+Select @Id
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteSizeMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create proc [dbo].[DeleteSizeMaster]
+@Id int,
+@ModifiedBy int
+As
+begin
+if exists (Select * From SizeMaster Where SizeId=@Id)
+begin
+Update SizeMaster set IsActive=0 ,ModifiedBy=@ModifiedBy,ModifiedOn=GETDATE() Where SizeId=@Id
+end
+else
+begin
+Select -1
+end
+
+end
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteTagMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create proc [dbo].[DeleteTagMaster]
+@Id int,
+@ModifiedBy int
+As
+begin
+if exists (Select * From TagMaster Where TagId=@Id)
+begin
+Update TagMaster set IsActive=0 ,ModifiedBy=@ModifiedBy,ModifiedOn=GETDATE() Where TagId=@Id
+end
+else
+begin
+Select -1
+end
+
+end
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteUserMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[DeleteUserMaster]
+(
+@UserId int
+)
+as 
+begin
+if  exists (Select * From UserMaster Where UserId=@UserId)
+begin
+Update UserMaster set IsActive=0 where UserId=@UserId
+Select UserId From UserMaster Where UserId=@UserId
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteUserType]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[DeleteUserType]
+(
+@Id int
+)
+as 
+begin
+if  exists (Select * From UserType Where UserTypeId=@Id and IsActive=1)
+begin
+Update UserType set IsActive=0 where UserTypeId=@Id and IsActive=1
+Select @Id
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllBrandLogo]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetAllBrandLogo]  
+as  
+Select   
+BrandLogoId as Id,  
+Name,  
+(Select Path From ImageServer Where IsActive=1)+Image as ImagePath,  
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end ,  
+CreatedBy,  
+ModifiedBy,  
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),  
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103)  
+from BrandLogoMaster Where IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllCategoryMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetAllCategoryMaster]  
+as  
+Select   
+CategoryId as Id,  
+Name,  
+Title,  
+IsSave,  
+link,  
+(Select Path From ImageServer Where IsActive=1)+Image as ImagePath,  
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end ,  
+CreatedBy,  
+ModifiedBy,  
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),  
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103)  
+from CategoryMaster Where IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllColorMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetAllColorMaster]
+as
+Select 
+ColorId as Id,
+Name,
+code,
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end ,
+CreatedBy,
+ModifiedBy,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103)
+
+from ColorMaster Where IsActive=1 order by Id  desc
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllContactUs]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create Proc [dbo].[GetAllContactUs]
+as
+Select 
+ContactId,
+FirstName,
+LastName,
+PhoneNumber,
+Email,
+Message,
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end ,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103)
+from ContactUs  Where IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllCustomer]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create Proc [dbo].[GetAllCustomer]
+as
+Select 
+CustomerId,
+FirstName,
+LastName,
+EmailId,
+Password,
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end ,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+from CustomerMaster U Where IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllProductMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetAllProductMaster]
+as
+Select 
+ProductId as Id,
+Name,
+Title,
+Code,
+Price,
+SalePrice,
+ShortDetails,
+Description,
+Quantity,
+Discount,
+IsNew,
+IsSale,
+CategoryId,
+ColorId,
+SizeId,
+TagId,
+Status=case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+from ProductMaster Where IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllProductPictureMapping]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create Proc [dbo].[GetAllProductPictureMapping]
+as
+Select 
+ProductId as Id,
+PictureName,
+PicturePath,
+Status=case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+from ProductPictureMapping Where IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllSizeMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[GetAllSizeMaster]    
+As    
+    
+Select SizeId as Id,    
+Size As Name,    
+Status = Case When ISNULL(IsActive,0)=1 then 'Active' else 'Deactive' end,    
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),    
+CreatedBy,    
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),    
+ModifiedBy     
+From SizeMaster Where IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllTagMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create proc [dbo].[GetAllTagMaster]
+As
+Select TagId as Id,
+TagName As Name,
+Status = Case When ISNULL(IsActive,0)=1 then 'Active' else 'Deactive' end,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+From TagMaster Where IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllUsers]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetAllUsers]
+as
+Select 
+UserId As Id,
+FirstName,
+LastName,
+Email,
+UserTypeId,
+UserType=Isnull((Select UserType From UserType Where IsActive=1 and UserTypeId=U.UserTypeId),''),
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end ,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+from UserMaster U Where IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllUserType]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetAllUserType]
+as
+Select 
+UserTypeId as Id,
+UserType as Name,
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end,
+CreatedBy,
+ModifiedBy,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103)
+
+from UserType Where IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetBrandLogobyId]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create Proc [dbo].[GetBrandLogobyId]
+@Id int
+as
+Select 
+BrandLogoId as Id,
+Name,
+Image as ImagePath,
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end ,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+from BrandLogoMaster Where IsActive=1 and BrandLogoId=@Id
+GO
+/****** Object:  StoredProcedure [dbo].[GetCategoryList]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetCategoryList]  
+as  
+Select * From tblCategory
+GO
+/****** Object:  StoredProcedure [dbo].[GetCategoryMasterbyId]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create Proc [dbo].[GetCategoryMasterbyId]
+@Id int
+as
+Select 
+CategoryId as Id,
+Name,
+Title,
+IsSave,
+link,
+Image as ImagePath,
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end ,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+from CategoryMaster Where IsActive=1 and CategoryId=@Id
+GO
+/****** Object:  StoredProcedure [dbo].[GetColorMasterbyId]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetColorMasterbyId] -- 3
+@Id int
+as
+Select 
+ColorId as Id,
+Name,
+Code,
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end ,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+from ColorMaster Where IsActive=1 and ColorId=@Id
+GO
+/****** Object:  StoredProcedure [dbo].[GetCustomerbyId]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create Proc [dbo].[GetCustomerbyId]
+@CustomerId int
+as
+Select 
+CustomerId,
+FirstName,
+LastName,
+EmailId,
+Password,
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end ,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+From CustomerMaster U Where IsActive=1 and CustomerId=@CustomerId
+GO
+/****** Object:  StoredProcedure [dbo].[GetCustomerLogin]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- [dbo].[GetCustomerLogin] 'Ajeetsingha@gmail.com','123456'      
+CREATE Proc [dbo].[GetCustomerLogin]       
+@UserName varchar(100),      
+@Password varchar(100)      
+as      
+      
+if exists (Select * From CustomerMaster Where IsActive=1 and EmailId=@UserName and Password=@Password)      
+begin      
+Select       
+CustomerId As Id,      
+FirstName,      
+LastName,      
+EmailId as Email,      
+UserTypeId=0,      
+UserType='',
+Token=''
+From CustomerMaster C Where IsActive=1 and EmailId=@UserName and Password=@Password      
+end      
+else      
+begin      
+Select       
+UserId As Id,      
+FirstName,      
+LastName,      
+Email,      
+UserTypeId,      
+UserType=0,
+Token=''   
+From UserMaster U Where 1=2      
+end
+GO
+/****** Object:  StoredProcedure [dbo].[GetLogin]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetLogin]  
+@UserName varchar(100),  
+@Password varchar(100)  
+as  
+  
+if exists (Select * From UserMaster Where IsActive=1 and Email=@UserName and Password=@Password)  
+begin  
+Select   
+UserId As Id,  
+FirstName,  
+LastName,  
+Email,  
+UserTypeId,  
+UserType=(Select UserType From UserType Where IsActive=1 and UserTypeId=U.UserTypeId),
+Token=''
+From UserMaster U Where IsActive=1 and Email=@UserName and Password=@Password  
+end  
+else  
+begin  
+Select   
+UserId As Id,  
+FirstName,  
+LastName,  
+Email,  
+UserTypeId,  
+UserType=0,
+Token=''
+From UserMaster U Where 1=2  
+end
+GO
+/****** Object:  StoredProcedure [dbo].[GetPicturesbyProductId]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetPicturesbyProductId]  
+@Id int  
+as  
+Select PM.ProductId,PicturePath As Name From ProductPictureMapping PM Where IsActive=1 
+And ProductId=@Id
+order by ProductPictureMappingId
+GO
+/****** Object:  StoredProcedure [dbo].[GetProductcolorsList]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetProductcolorsList]  
+As  
+Select distinct P.ProductId,C.Name From ProductMaster P Inner Join ColorMaster C on P.ColorId=C.ColorId Where P.IsActive=1 and C.IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetProductList]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetProductList]  
+as  
+Select   
+ProductId as id,
+P.Name as name, 
+Price as price,  
+SalePrice as salePrice,  
+Discount as discount,
+ShortDetails as shortDetails,  
+Description as description, 
+Quantity as stock,
+IsNew as isNew,  
+IsSale as isSale,
+CM.Name as category
+From ProductMaster P
+Inner join CategoryMaster CM on CM.CategoryId=P.CategoryId
+Where P.IsActive=1 And CM.IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetProductMasterbyId]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetProductMasterbyId]
+@Id int
+as
+Select 
+ProductId as Id,
+Name,
+Title,
+Code,
+Price,
+SalePrice,
+ShortDetails,
+Description,
+Quantity,
+Discount,
+IsNew,
+IsSale,
+CategoryId,
+ColorId,
+SizeId,
+TagId,
+Status=case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+from ProductMaster Where IsActive=1 and ProductId=@Id
+GO
+/****** Object:  StoredProcedure [dbo].[GetProductPictureMappingById]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create Proc [dbo].[GetProductPictureMappingById]
+@Id int
+as
+Select 
+ProductId as Id,
+PictureName,
+PicturePath,
+Status=case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+from ProductPictureMapping Where IsActive=1 and ProductId=@Id
+GO
+/****** Object:  StoredProcedure [dbo].[GetProductPicturesList]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetProductPicturesList]    
+As    
+Select PM.ProductId,
+(Select Path From ImageServer Where IsActive=1)+PicturePath As Name 
+From ProductPictureMapping PM Where IsActive=1 order by ProductPictureMappingId
+GO
+/****** Object:  StoredProcedure [dbo].[GetProductSizesList]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create Proc [dbo].[GetProductSizesList]  
+As  
+Select distinct P.ProductId,S.Size as Name From ProductMaster P Inner Join SizeMaster S on P.ColorId=S.SizeId Where P.IsActive=1 and S.IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetProductTagsList]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create Proc [dbo].[GetProductTagsList]  
+As  
+Select distinct P.ProductId,T.TagName as Name From ProductMaster P Inner Join TagMaster T on P.TagId=T.TagId Where P.IsActive=1 and T.IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetProductVariantsList]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetProductVariantsList]    
+As    
+Select distinct P.ProductId,C.Name as color,
+(Select Path From ImageServer Where IsActive=1)+PM.PicturePath as images 
+From ProductMaster P   
+Inner Join ProductPictureMapping PM on PM.ProductId=P.ProductId   
+Inner Join ColorMaster C on P.ColorId=C.ColorId   
+Where P.IsActive=1 and C.IsActive=1 and PM.IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetSizeMasterbyId]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[GetSizeMasterbyId]  
+@Id int  
+As  
+  
+Select SizeId as Id,  
+Size As Name,  
+Status = Case When ISNULL(IsActive,0)=1 then 'Active' else 'Deactive' end,  
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),  
+CreatedBy,  
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),  
+ModifiedBy   
+From SizeMaster Where SizeId=@Id and IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetTagMasterbyId]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create proc [dbo].[GetTagMasterbyId]
+@Id int
+As
+
+Select TagId as Id,
+TagName As Name,
+Status = Case When ISNULL(IsActive,0)=1 then 'Active' else 'Deactive' end,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+From TagMaster Where TagId=@Id and IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[GetUserbyId]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetUserbyId]
+@UserId int
+as
+Select 
+UserId As Id,
+FirstName,
+LastName,
+Email,
+Password,
+UserTypeId,
+UserType=(Select UserType From UserType Where IsActive=1 and UserTypeId=U.UserTypeId),
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end ,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+From UserMaster U Where IsActive=1 and UserId=@UserId
+GO
+/****** Object:  StoredProcedure [dbo].[GetUserTypebyId]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[GetUserTypebyId]
+@Id int
+as
+Select 
+UserTypeId as Id,
+UserType as Name,
+Status = case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end,
+CreatedOn=CONVERT(varchar(10),CreatedOn,103),
+CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),
+ModifiedBy 
+from UserType Where IsActive=1 and UserTypeId=@Id
+GO
+/****** Object:  StoredProcedure [dbo].[InsertBillingDetails]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertBillingDetails]
+@CustomerId int,
+@FirstName varchar(255),
+@LastName varchar(255),
+@Phone varchar(20),
+@EmailId varchar(255),
+@CountryId int,
+@Address varchar(255),
+@City varchar(255),
+@State varchar(255),
+@PostalCode varchar(255),
+@CreatedBy int
+As
+begin
+Insert into BillingDetails (CustomerId,FirstName,LastName,Phone,EmailId,CountryId,Address,City,State,PostalCode,CreatedBy) 
+values (@CustomerId,@FirstName,@LastName,@Phone,@EmailId,@CountryId,@Address,@City,@State,@PostalCode,@CreatedBy)
+
+
+Select 
+BillingDetailId as Id,CustomerId,FirstName,LastName,Phone,EmailId,CountryId,Address,City,State,PostalCode,
+Status=case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end,CreatedOn=CONVERT(varchar(10),CreatedOn,103),CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),ModifiedBy 
+from BillingDetails Where IsActive=1 and BillingDetailId=ident_current('BillingDetails')
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertBillMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create proc [dbo].[InsertBillMaster]
+@PurchaseId int,
+@BillingDetailsId int
+As
+
+begin
+Insert into BillMaster (PurchaseId,BillingDetailsId) 
+values (@PurchaseId,@BillingDetailsId)
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertBrandLogo]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertBrandLogo]
+@Name varchar(50),
+@ImagePath varchar(250),
+@CreatedBy int
+As
+if not exists (Select * From BrandLogoMaster Where Name=@Name)
+begin
+Insert into BrandLogoMaster (Name,Image,CreatedBy) values (@Name,@ImagePath,@CreatedBy)
+Select ident_current('BrandLogoMaster')
+end
+else
+begin
+Select -1
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertCategoryMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertCategoryMaster]  
+@Name varchar(100),  
+@Title varchar(100),  
+@ImagePath varchar(500),  
+@IsSave int,  
+@link varchar(500),  
+@CreatedBy int  
+
+--@Name,@Title,@ImagePath,@IsSave,@link,@CreatedBy
+ 
+ 
+As  
+if not exists (Select * From CategoryMaster Where Name=@Name and IsActive=1)  
+begin  
+Insert into CategoryMaster (Name,Image,Title,IsSave,link,CreatedBy) values (@Name,@ImagePath,@Title,@IsSave,@link,@CreatedBy)  
+Select ident_current('CategoryMaster')  
+end  
+else  
+begin  
+Select -1  
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertColorMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[InsertColorMaster] --'White','White',1
+@Name varchar(100),
+@Code varchar(100),
+@CreatedBy int
+As
+if not exists (Select * From ColorMaster Where Code=@Code and IsActive=1)
+begin
+Insert into ColorMaster (Name,Code,CreatedBy) values (@Name,@Code,@CreatedBy)
+Select IDENT_CURRENT('ColorMaster')
+end
+else
+begin
+Select -1
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertContactUs]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertContactUs]
+@FirstName varchar(50),
+@LastName varchar(50),
+@Email varchar(50),
+@PhoneNumber varchar(13),
+@Message varchar(500),
+@CreatedBy int
+As
+Begin
+Insert into ContactUs (FirstName,LastName,Email,PhoneNumber,Message) values (@FirstName,@LastName,@Email,@PhoneNumber,@Message)
+Select ident_current('ContactUs')
+Select 1
+End
+GO
+/****** Object:  StoredProcedure [dbo].[InsertCustomerMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertCustomerMaster]
+@FirstName varchar(50),
+@LastName varchar(50),
+@Email varchar(50),
+@Password varchar(50)
+As
+if not exists (Select * From CustomerMaster Where EmailId=@Email and IsActive=1)
+begin
+Insert into CustomerMaster (FirstName,LastName,EmailId,Password) values (@FirstName,@LastName,@Email,@Password)
+Select 1
+end
+else
+begin
+Select -1
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertExceptionLog]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create Proc [dbo].[InsertExceptionLog]
+@TimeStamp datetime,
+@Message varchar(500),
+@Type varchar(500),
+@Source  varchar(500),
+@StackTrace  varchar(500),
+@RequestPath  varchar(500)
+As
+begin
+Insert into LogEntry (TimeStamp,Message,Type,Source,StackTrace,RequestPath) values (@TimeStamp,@Message,@Type,@Source,@StackTrace,@RequestPath)
+Select IDENT_CURRENT('LogEntry')
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertMembershipCategory]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertMembershipCategory]
+@MembershipName varchar(50),
+@CategoryType varchar(50),
+@Description varchar(max)
+As
+if not exists (Select * From tblCategory Where MembershipName=@MembershipName)
+begin
+Insert into tblCategory (MembershipName,CategoryType,Description) values (@MembershipName,@CategoryType,@Description)
+Select 1
+end
+else
+begin
+Select -1
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertOnlinePaymentMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertOnlinePaymentMaster]  
+@PaymentId bigint,  
+@tokenId varchar(255),  
+@transactionId  varchar(255),  
+@country  varchar(50),  
+@brand  varchar(20),  
+@exp_month int,  
+@exp_year int,  
+@cvc_check  varchar(20),  
+@Email  varchar(50),  
+@status  varchar(50),  
+@description  varchar(1000),  
+@amount decimal(18,2),  
+@CreatedBy int  
+As  
+Insert into OnlinePaymentMaster (PaymentId,tokenId,transactionId,country,brand,exp_month,exp_year,cvc_check,Email,status,description,amount,CreatedBy)   
+values (@PaymentId,@tokenId,@transactionId,@country,@brand,@exp_month,@exp_year,@cvc_check,@Email,@status,@description,@amount,@CreatedBy)  
+  
+  
+Select OnlinePaymentId As Id,PaymentId,tokenId,transactionId,country,brand,exp_month,exp_year,cvc_check,Email,status,description,amount From OnlinePaymentMaster
+where OnlinePaymentId = ident_current('OnlinePaymentMaster')
+GO
+/****** Object:  StoredProcedure [dbo].[InsertPaymentMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertPaymentMaster]
+@BillDetailId int,
+@SubTotalAmount varchar(100),
+@ShippingAmount varchar(100),
+@PaymentTypeId int,
+@PaymentStatus int,
+@CreatedBy int
+As
+
+begin
+Insert into PaymentMaster (BillDetailId,SubTotalAmount,ShippingAmount,TotalAmount,PaymentTypeId,PaymentDate,PaymentStatus,CreatedBy,OrderId,InvoiceNo) 
+values (@BillDetailId,@SubTotalAmount,@ShippingAmount,CAST(@SubTotalAmount as decimal(18,2))+CAST(@ShippingAmount as decimal(18,2)),@PaymentTypeId,GETDATE(),
+@PaymentStatus,@CreatedBy,(convert(numeric(12,0),rand() * 899999) + 100000) ,(convert(numeric(12,0),rand() * 798988) + 100000))
+end
+
+
+Select PaymentId as Id,BillDetailId,SubTotalAmount,ShippingAmount,PaymentTypeId,PaymentStatus,OrderId,CONVERT(varchar(20),PaymentDate,102) as PaymentDate
+,Expecteddate=CONVERT(varchar(20),PaymentDate+3,102)
+From PaymentMaster where PaymentId=ident_current('PaymentMaster')
+GO
+/****** Object:  StoredProcedure [dbo].[InsertProductMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[InsertProductMaster]
+@Name  varchar(50),
+@Title  varchar(50),
+@Code  varchar(20),
+@Price decimal(18,2),
+@SalePrice decimal(18,2),
+@ShortDetails varchar(250),
+@Description varchar(500),
+@Quantity int,
+@Discount int,
+@IsNew int,
+@IsSale int,
+@CategoryId int,
+@ColorId int,
+@SizeId int,
+@TagId int,
+@CreatedBy int
+As
+if not exists (Select * From ProductMaster Where Code=@Code and IsActive=1)
+begin
+Insert into ProductMaster (Name,Title,Code,Price,SalePrice,ShortDetails,Description,Quantity,Discount,IsNew,IsSale,CategoryId,ColorId,SizeId,TagId,CreatedBy) 
+values (@Name,@Title,@Code,@Price,@SalePrice,@ShortDetails,@Description,@Quantity,@Discount,@IsNew,@IsSale,@CategoryId,@ColorId,@SizeId,@TagId,@CreatedBy)
+--Select ident_current('ProductMaster')
+
+Select 
+ProductId as Id,Name,Title,Code,Price,SalePrice,ShortDetails,Description,Quantity,Discount,IsNew,IsSale,CategoryId,ColorId,SizeId,TagId,
+Status=case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end,CreatedOn=CONVERT(varchar(10),CreatedOn,103),CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),ModifiedBy 
+from ProductMaster Where IsActive=1 and ProductId=ident_current('ProductMaster')
+end
+else
+begin
+Select 
+ProductId as Id,Name,Title,Code,Price,SalePrice,ShortDetails,Description,Quantity,Discount,IsNew,IsSale,CategoryId,ColorId,SizeId,TagId,
+Status=case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end,CreatedOn=CONVERT(varchar(10),CreatedOn,103),CreatedBy,
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),ModifiedBy 
+from ProductMaster Where IsActive=1 and 1=2
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertProductPictureMapping]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[InsertProductPictureMapping]
+@ProductId int,
+@PictureName varchar(100),
+@PicturePath varchar(100),
+@IsDelete int,
+@CreatedBy int
+As
+if not exists (Select * From ProductPictureMapping Where ProductId=@ProductId and IsActive=1)
+begin
+Insert into ProductPictureMapping (ProductId,PictureName,PicturePath,CreatedBy) 
+values (@ProductId,@PictureName,@PicturePath,@CreatedBy)
+end
+else if exists (Select * From ProductPictureMapping Where ProductId=@ProductId and IsActive=1)
+begin
+if(@IsDelete=1)
+begin
+Update ProductPictureMapping set IsActive=0 ,ModifiedBy=@CreatedBy,ModifiedOn=GETDATE() where ProductId=@ProductId and IsActive=1
+end
+Insert into ProductPictureMapping (ProductId,PictureName,PicturePath,CreatedBy) 
+values (@ProductId,@PictureName,@PicturePath,@CreatedBy)
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertPurchaseItemMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertPurchaseItemMaster]
+@ProductId int,
+@Price varchar(255),
+@Discount varchar(255),
+@Quantity varchar(20),
+@Color varchar(50),
+@Size varchar(50),
+@CreatedBy int
+As
+
+begin
+Insert into PurchaseItemMaster (ProductId,Color,Size,Price,Discount,Quantity,Amount,CreatedBy) 
+values (@ProductId,@Color,@Size,@Price,@Discount,@Quantity,cast(@Price as decimal)-CAST(@Discount as int),@CreatedBy)
+
+Select 
+PurchaseId as Id,ProductId,Color,Size,Price,Discount,Quantity,Amount,
+Status=case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end,CreatedOn=CONVERT(varchar(10),CreatedOn,103),CreatedBy,
+ModifiedOn=CONVERT(varchar(10),CreatedOn,103),ModifiedBy=CreatedBy
+from PurchaseItemMaster Where IsActive=1 and PurchaseId=ident_current('PurchaseItemMaster')
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertSizeMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertSizeMaster]
+@Name varchar(50),
+@CreatedBy int
+AS
+begin
+
+if not exists(Select * From SizeMaster Where Size=@Name and IsActive=1)
+begin
+Insert into SizeMaster (Size,CreatedBy) values (@Name,@CreatedBy)
+select ident_current('SizeMaster')
+end
+else
+begin
+select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertTagMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create proc [dbo].[InsertTagMaster]
+@Name varchar(50),
+@CreatedBy int
+As
+begin
+
+if not exists (Select * From TagMaster Where TagName=@Name and IsActive=1)
+begin
+Insert into TagMaster (TagName,CreatedBy) values (@Name,@CreatedBy)
+Select ident_current('TagMaster')
+end
+else 
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertUserMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertUserMaster]
+@FirstName varchar(50),
+@LastName varchar(50),
+@Email varchar(50),
+@Password varchar(50),
+@UserTypeId int,
+@CreatedBy int
+As
+if not exists (Select * From UserMaster Where Email=@Email and IsActive=1)
+begin
+Insert into UserMaster (FirstName,LastName,Email,Password,UserTypeId,CreatedBy) values (@FirstName,@LastName,@Email,@Password,@UserTypeId,@CreatedBy)
+Select ident_current('UserMaster')
+end
+else
+begin
+Select -1
+end
+GO
+/****** Object:  StoredProcedure [dbo].[InsertUserType]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[InsertUserType]
+@Name varchar(50),
+@CreatedBy int
+As
+if not exists (Select * From UserType Where UserType=@Name and IsActive=1)
+begin
+Insert into UserType (UserType,CreatedBy) values (@Name,@CreatedBy)
+Select ident_current('UserType')
+end
+else
+begin
+Select -1
+end
+GO
+/****** Object:  StoredProcedure [dbo].[Proc_ChartOrderStatus]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create Proc [dbo].[Proc_ChartOrderStatus]  
+As 
+Select OS.OrderStatus,convert(varchar(12),PM.PaymentDate,105) Date,COUNT(PM.OrderId) counts
+From PaymentMaster PM  
+Inner Join PaymentStatusMaster PS on PS.Id=PM.PaymentStatus  
+Inner Join PaymentTypeMaster PT on PT.Id=PM.PaymentTypeId  
+Inner Join OrderStatusMaster OS on OS.Id=PM.OrderStatusId  
+Where PM.IsActive=1 and PS.IsActive=1 and PT.IsActive=1  
+And day(PM.PaymentDate)>=day(GETDATE()-7)  
+Group by OS.OrderStatus,convert(varchar(12),PM.PaymentDate,105)
+order by convert(varchar(12),PM.PaymentDate,105)
+GO
+/****** Object:  StoredProcedure [dbo].[Proc_ChartSalesDataPaymentTypeWise]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[Proc_ChartSalesDataPaymentTypeWise]  
+As 
+Select PT.PaymentType,convert(varchar(12),PM.PaymentDate,105) Date,COUNT(PM.PaymentId) counts
+From PaymentMaster PM  
+Inner Join PaymentStatusMaster PS on PS.Id=PM.PaymentStatus  
+Inner Join PaymentTypeMaster PT on PT.Id=PM.PaymentTypeId  
+Inner Join OrderStatusMaster OS on OS.Id=PM.OrderStatusId  
+Where PM.IsActive=1 and PS.IsActive=1 and PT.IsActive=1  
+And day(PM.PaymentDate)>=day(GETDATE()-7)  
+Group by PT.PaymentType,convert(varchar(12),PM.PaymentDate,105)
+order by convert(varchar(12),PM.PaymentDate,105)
+GO
+/****** Object:  StoredProcedure [dbo].[Proc_ChartUserGrowth]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create Proc [dbo].[Proc_ChartUserGrowth]  
+As 
+Select UT.UserType,convert(varchar(12),U.CreatedOn,105) Date,COUNT(U.UserId) counts
+From UserMaster U
+Inner Join UserType UT on U.UserTypeId=UT.UserTypeId  
+Where U.IsActive=1 and UT.IsActive=1
+And day(U.CreatedOn)>=day(GETDATE()-7)  
+Group by UT.UserType,convert(varchar(12),U.CreatedOn,105)
+order by convert(varchar(12),U.CreatedOn,105)
+GO
+/****** Object:  StoredProcedure [dbo].[Proc_ReportCashOnDelivery]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create Proc [dbo].[Proc_ReportCashOnDelivery]
+As
+Select 
+OrderId,
+PaymentStatus=Case 
+                 When PM.PaymentStatus=1 then '<span class="badge badge-secondary">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=2 then '<span class="badge badge-success">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=3 then '<span class="badge badge-warning">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=4 then '<span class="badge badge-danger">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=5 then '<span class="badge badge-danger">'+PS.Status+'</span>'  
+              else '' end,
+PaymentMethod=PT.PaymentType,
+OrderStatus=Case 
+                 When PM.OrderStatusId=1 then '<span class="badge badge-success">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=2 then '<span class="badge badge-primary">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=3 then '<span class="badge badge-warning">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=4 then '<span class="badge badge-danger">'+OS.OrderStatus+'</span>'  
+            else '' end,
+CONVERT(varchar(12),PaymentDate,102) as PaymentDate,
+SubTotalAmount,
+ShippingAmount,
+TotalAmount 
+From PaymentMaster PM
+Inner Join PaymentStatusMaster PS on PS.Id=PM.PaymentStatus
+Inner Join PaymentTypeMaster PT on PT.Id=PM.PaymentTypeId
+Inner Join OrderStatusMaster OS on OS.Id=PM.OrderStatusId
+Where PM.IsActive=1 and PS.IsActive=1 and PT.IsActive=1
+And PM.PaymentStatus=1
+GO
+/****** Object:  StoredProcedure [dbo].[Proc_ReportInvoiceList]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[Proc_ReportInvoiceList]
+As
+Select 
+InvoiceNo,
+OrderId,
+PaymentStatus=Case 
+                 When PM.PaymentStatus=1 then '<span class="badge badge-secondary">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=2 then '<span class="badge badge-success">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=3 then '<span class="badge badge-warning">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=4 then '<span class="badge badge-danger">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=5 then '<span class="badge badge-danger">'+PS.Status+'</span>'  
+              else '' end,
+PaymentMethod=PT.PaymentType,
+OrderStatus=Case 
+                 When PM.OrderStatusId=1 then '<span class="badge badge-success">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=2 then '<span class="badge badge-primary">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=3 then '<span class="badge badge-warning">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=4 then '<span class="badge badge-danger">'+OS.OrderStatus+'</span>'  
+            else '' end,
+CONVERT(varchar(12),PaymentDate,102) as PaymentDate,
+SubTotalAmount,
+ShippingAmount,
+TotalAmount 
+From PaymentMaster PM
+Inner Join PaymentStatusMaster PS on PS.Id=PM.PaymentStatus
+Inner Join PaymentTypeMaster PT on PT.Id=PM.PaymentTypeId
+Inner Join OrderStatusMaster OS on OS.Id=PM.OrderStatusId
+Where PM.IsActive=1 and PS.IsActive=1 and PT.IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[Proc_ReportManageOrder]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[Proc_ReportManageOrder]
+As
+Select OrderId,
+InvoiceNo,
+PaymentStatus=Case 
+                 When PM.PaymentStatus=1 then '<span class="badge badge-secondary">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=2 then '<span class="badge badge-success">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=3 then '<span class="badge badge-warning">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=4 then '<span class="badge badge-danger">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=5 then '<span class="badge badge-danger">'+PS.Status+'</span>'  
+              else '' end,
+PaymentMethod=PT.PaymentType,
+OrderStatus=Case 
+                 When PM.OrderStatusId=1 then '<span class="badge badge-success">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=2 then '<span class="badge badge-primary">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=3 then '<span class="badge badge-warning">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=4 then '<span class="badge badge-danger">'+OS.OrderStatus+'</span>'  
+            else '' end,
+CONVERT(varchar(12),PaymentDate,102) as PaymentDate,
+SubTotalAmount,
+ShippingAmount,
+TotalAmount 
+From PaymentMaster PM
+Inner Join PaymentStatusMaster PS on PS.Id=PM.PaymentStatus
+Inner Join PaymentTypeMaster PT on PT.Id=PM.PaymentTypeId
+Inner Join OrderStatusMaster OS on OS.Id=PM.OrderStatusId
+Where PM.IsActive=1 and PS.IsActive=1 and PT.IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[Proc_ReportNetFigure]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[Proc_ReportNetFigure]  
+As  
+Select isnull(Sum(PM.TotalAmount),0) as Orders,isnull(Sum(PM.ShippingAmount),0) as ShippingAmount ,  
+CashOnDelivery=(Select Sum(TotalAmount) from PaymentMaster where PaymentTypeId=1),  
+Cancelled=(Select Sum(TotalAmount) from PaymentMaster where OrderStatusId=4)  
+From PaymentMaster PM  
+Inner Join PaymentStatusMaster PS on PS.Id=PM.PaymentStatus  
+Inner Join PaymentTypeMaster PT on PT.Id=PM.PaymentTypeId  
+Inner Join OrderStatusMaster OS on OS.Id=PM.OrderStatusId  
+Where PM.IsActive=1 and PS.IsActive=1 and PT.IsActive=1  
+And YEAR(PM.PaymentDate)=YEAR(GETDATE())
+GO
+/****** Object:  StoredProcedure [dbo].[Proc_ReportTransactionDetails]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create Proc [dbo].[Proc_ReportTransactionDetails]
+As
+Select 
+TransactionsId='',
+OrderId,
+PaymentStatus=Case 
+                 When PM.PaymentStatus=1 then '<span class="badge badge-secondary">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=2 then '<span class="badge badge-success">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=3 then '<span class="badge badge-warning">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=4 then '<span class="badge badge-danger">'+PS.Status+'</span>'  
+                 When PM.PaymentStatus=5 then '<span class="badge badge-danger">'+PS.Status+'</span>'  
+              else '' end,
+PaymentMethod=PT.PaymentType,
+OrderStatus=Case 
+                 When PM.OrderStatusId=1 then '<span class="badge badge-success">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=2 then '<span class="badge badge-primary">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=3 then '<span class="badge badge-warning">'+OS.OrderStatus+'</span>'  
+                 When PM.OrderStatusId=4 then '<span class="badge badge-danger">'+OS.OrderStatus+'</span>'  
+            else '' end,
+CONVERT(varchar(12),PaymentDate,102) as PaymentDate,
+SubTotalAmount,
+ShippingAmount,
+TotalAmount 
+From PaymentMaster PM
+Inner Join PaymentStatusMaster PS on PS.Id=PM.PaymentStatus
+Inner Join PaymentTypeMaster PT on PT.Id=PM.PaymentTypeId
+Inner Join OrderStatusMaster OS on OS.Id=PM.OrderStatusId
+Where PM.IsActive=1 and PS.IsActive=1 and PT.IsActive=1
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateBrandLogo]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[UpdateBrandLogo] --1,'Lee','',1,''
+(
+@Id int,
+@Name varchar(50),
+@ImagePath varchar(250),
+@ModifiedBy int,
+@ModifiedOn datetime
+)
+as 
+begin
+if not exists (Select * From BrandLogoMaster Where Name=@Name and BrandLogoId<>@Id and IsActive=1)
+begin
+   if(@ImagePath='')
+     begin
+        update BrandLogoMaster set Name=@Name,ModifiedOn=@ModifiedOn,ModifiedBy=@ModifiedBy where BrandLogoId=@Id
+        Select @Id
+     end
+     else
+     begin
+        update BrandLogoMaster set Name=@Name,Image=@ImagePath,ModifiedOn=@ModifiedOn,ModifiedBy=@ModifiedBy where BrandLogoId=@Id
+        Select @Id
+     end
+end
+else
+   begin
+    Select -1
+   end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateCategoryMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[UpdateCategoryMaster]
+(
+@Id int,
+@Name varchar(50),
+@Title varchar(100),
+@ImagePath varchar(250),
+@IsSave int,
+@link varchar(100),
+@ModifiedBy int,
+@ModifiedOn datetime
+)
+as 
+begin
+if not exists (Select * From CategoryMaster Where Name=@Name and CategoryId<>@Id and IsActive=1)
+begin
+ if(@ImagePath='')
+     begin
+      update CategoryMaster set Name=@Name,Title=@Title,IsSave=@IsSave,link=@link,ModifiedOn=@ModifiedOn,ModifiedBy=@ModifiedBy where CategoryId=@Id
+        Select @Id
+     end
+     else
+     begin
+        update CategoryMaster set Name=@Name,Title=@Title,Image=@ImagePath,IsSave=@IsSave,link=@link,ModifiedOn=@ModifiedOn,ModifiedBy=@ModifiedBy where CategoryId=@Id
+        Select @Id
+     end
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateColorMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+--select * from colorMaster
+
+CREATE proc [dbo].[UpdateColorMaster] --1,'Green','green',1,'2020-04-14T03:07:06.391Z'
+(
+@Id int,
+@Name varchar(50),
+@Code varchar(250),
+@ModifiedBy int
+)
+as 
+begin
+if not exists (Select * From ColorMaster Where Code=@Code  and ColorId<>@Id and IsActive=1)
+begin
+update ColorMaster set Name=@Name,Code=@Code,ModifiedOn=GETDATE(),ModifiedBy=@ModifiedBy where ColorId=@Id and IsActive=1
+Select @Id
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateCustomerMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[UpdateCustomerMaster]
+(
+@CustomerId int,
+@FirstName varchar(50),
+@LastName varchar(50),
+@Email varchar(50),
+@Password varchar(50),
+@ModifiedBy int,
+@ModifiedOn datetime
+)
+as 
+begin
+if  exists (Select * From CustomerMaster Where EmailId=@Email and CustomerId<>@CustomerId)
+begin
+update CustomerMaster set FirstName=@FirstName,LastName=@LastName,EmailId=@Email,Password=@Password,ModifiedOn=@ModifiedOn,ModifiedBy=@ModifiedBy where CustomerId=@CustomerId
+Select CustomerId from CustomerMaster Where CustomerId=@CustomerId
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateMembershipCategory]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[UpdateMembershipCategory]
+(
+@Id int,
+@MembershipName varchar(50),
+@CategoryType varchar(50),
+@Description varchar(max)
+)
+as 
+begin
+if not exists (Select * From tblCategory Where MembershipName=@MembershipName)
+begin
+update tblCategory set MembershipName=@MembershipName,CategoryType=@CategoryType,Description=@Description where Id=@Id
+Select Id from tblCategory Where Id=@Id
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateProductMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE Proc [dbo].[UpdateProductMaster]  
+@Id int,  
+@Name  varchar(50),  
+@Title  varchar(50),  
+@Code  varchar(20),  
+@Price decimal(18,2),  
+@SalePrice decimal(18,2),  
+@ShortDetails varchar(250),  
+@Description varchar(500),  
+@Quantity int,  
+@Discount int,  
+@IsNew int,  
+@IsSale int,  
+@CategoryId int,  
+@ColorId int,  
+@SizeId int,  
+@TagId int,  
+@ModifiedBy int  
+As  
+if not exists (Select * From ProductMaster Where Code=@Code and ProductId<>@Id and IsActive=1)  
+begin  
+update ProductMaster set Name=@Name,Title=@Title,Code=@Code,Price=@Price,SalePrice=@SalePrice,ShortDetails=@ShortDetails,Description=@Description,Quantity=@Quantity,  
+Discount=@Discount,IsNew=@IsNew,IsSale=@IsSale,CategoryId=@CategoryId,ColorId=@ColorId,SizeId=@SizeId,TagId=@TagId,ModifiedBy=@ModifiedBy,ModifiedOn=GETDATE()  
+Where ProductId=@Id and IsActive=1  
+  
+Select   
+ProductId as Id,Name,Title,Code,Price,SalePrice,ShortDetails,Description,Quantity,Discount,IsNew,IsSale,CategoryId,ColorId,SizeId,TagId,  
+Status=case when isnull(IsActive,0)=1 then 'Active' else 'DeActive' end,CreatedOn=CONVERT(varchar(10),CreatedOn,103),CreatedBy,  
+ModifiedOn=CONVERT(varchar(10),ModifiedOn,103),ModifiedBy   
+from ProductMaster Where IsActive=1 and ProductId=@Id  
+end  
+else  
+begin  
+Select -1  
+end
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateProductPictureMapping]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create Proc [dbo].[UpdateProductPictureMapping]
+@ProductPictureMappingId int,
+@ProductId int,
+@PictureName  varchar(50),
+@PicturePath  varchar(20),
+@ModifiedBy int
+As
+begin
+update ProductPictureMapping set PictureName=@PictureName,PicturePath=@PicturePath,ModifiedBy=@ModifiedBy Where ProductId=@ProductId and ProductPictureMappingId=@ProductPictureMappingId and IsActive=1
+Select @ProductId
+end
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateSizeMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[UpdateSizeMaster]
+@Id int,
+@Name varchar(50),
+@ModifiedBy int
+AS
+
+if not exists (Select * From SizeMaster Where Size=@Name and IsActive=1 and SizeId<>@Id)
+begin
+Update SizeMaster set Size=@Name,ModifiedBy=@ModifiedBy,ModifiedOn=GETDATE() Where SizeId=@Id
+end
+else
+begin
+Select -1
+end
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateTagMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create proc [dbo].[UpdateTagMaster]
+@Id int,
+@Name varchar(50),
+@ModifiedBy int
+AS
+
+if not exists (Select * From TagMaster Where TagName=@Name and IsActive=1 and TagId<>@Id)
+begin
+Update TagMaster set TagName=@Name,ModifiedBy=@ModifiedBy,ModifiedOn=GETDATE() Where TagId=@Id
+end
+else
+begin
+Select -1
+end
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateUserMaster]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[UpdateUserMaster]
+(
+@UserId int,
+@FirstName varchar(50),
+@LastName varchar(50),
+@Email varchar(50),
+@Password varchar(50),
+@UserTypeId int,
+@ModifiedBy int,
+@ModifiedOn datetime
+)
+as 
+begin
+if not exists (Select * From UserMaster Where Email=@Email  and UserId<>@UserId and IsActive=1)
+begin
+update UserMaster set FirstName=@FirstName,LastName=@LastName,Email=@Email,Password=@Password,UserTypeId=@UserTypeId,ModifiedOn=@ModifiedOn where UserId=@UserId and IsActive=1
+Select UserId as Id from UserMaster Where UserId=@UserId and IsActive=1
+end
+else
+begin
+Select -1
+end
+end
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateUserType]    Script Date: 7/5/2021 3:27:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[UpdateUserType]
+(
+@Id int,
+@Name varchar(50),
+@ModifiedBy int,
+@ModifiedOn datetime
+)
+as 
+begin
+if not exists (Select * From UserType Where UserType=@Name and UserTypeId<>@Id and IsActive=1)
+begin
+update UserType set UserType=@Name,ModifiedOn=@ModifiedOn,ModifiedBy=@ModifiedBy where UserTypeId=@Id and IsActive=1
+Select @Id
+end
+else
+begin
+Select -1
+end
+end
+GO
