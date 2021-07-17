@@ -1,0 +1,1410 @@
+import { Injectable } from '@angular/core';
+import { Http, Response, Headers, RequestOptions, URLSearchParams } from '@angular/http';
+import { Observable } from 'rxjs/Rx';
+import { Router, ActivatedRoute } from '@angular/router';
+import { List } from '../linq';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
+import { window } from 'rxjs/operator/window';
+import { Window } from 'selenium-webdriver';
+import { TranslateService } from 'ng2-translate/ng2-translate';
+
+
+@Injectable()
+export class APIService {
+    baseurl: string = '';
+    ClientName: string = '';
+    NewVersion: string;
+    OldVersion: string;
+    constructor(private http: Http,
+        private _router: Router,
+        private translate: TranslateService) {
+        //this.Setlanguage();
+        this.SetAPIUrl();
+    }
+    Setlanguage() {
+        this.translate.addLangs(["en", "es"])
+        let language = localStorage.getItem('language');
+        if (language == "null" || language == null || language == '' || language === undefined) {
+            language = "en"
+            this.translate.setDefaultLang(language);
+            this.translate.use(language);
+            localStorage.setItem('language', language)
+        }
+        else {
+            this.translate.setDefaultLang(language);
+            this.translate.use(language);
+            localStorage.setItem('language', language)
+        }
+        if (language == "en") {
+            this.GetJsonForEngilsh();
+        }
+        else {
+            this.GetJsonForSpanish();
+        }
+    }
+
+    SetAPIUrl() {
+        let url = localStorage.getItem('APIUrl');
+        let ClientName = JSON.parse(localStorage.getItem('ClientName'));
+        if (url == null || url === undefined || url === "undefined") {
+            this.http.get('./assets/AppConfig.json').map((res: Response) => res.json()).subscribe(
+                data => {
+                    let ObjectData = data['APIUrl'];
+                    let ObjectDataClientName = data['ClientName'];
+                    this.ClientName = ObjectDataClientName;
+                    this.baseurl = ObjectData;
+                    localStorage.setItem('APIUrl', ObjectData);
+                    localStorage.setItem('WebAppVersion', JSON.stringify(data['WebAppVersion']));
+                    let results = JSON.parse(localStorage.getItem('WebAppVersion'));
+                    let WeboldAppVersion = localStorage.getItem('WeboldAppVersion')
+                    if (WeboldAppVersion == null || WeboldAppVersion === undefined || WeboldAppVersion == "undefined") {
+                        localStorage.setItem('WeboldAppVersion', results)
+                    }
+                    if (results != WeboldAppVersion) {
+                        this.NewVersion = this.GetWebAppVersion();
+                        this.OldVersion = this.GetoldWebAppVersion();
+                        if (this.NewVersion != this.OldVersion) {
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            location.reload();
+                            this._router.navigate(['home']);
+                        }
+                    }
+                    localStorage.setItem('ClientName', JSON.stringify(data['ClientName']));
+                }
+            );
+        }
+        if (url == null || url === undefined || url === "undefined") {
+        } else {
+            this.baseurl = url;
+            this.ClientName = ClientName;
+
+        }
+    }
+
+    GetMesageFormJson(Message: string) {
+        let ReturnMessage: string = ''
+        var myObj = JSON.parse(localStorage.getItem('Messages'));
+        let Messagestring = [];
+        Messagestring = Message.split('.');
+        ReturnMessage = myObj[Messagestring[0]][Messagestring[1]];
+        return ReturnMessage;
+    }
+
+    GetJsonForEngilsh() {
+        let url = localStorage.getItem('APIUrl');
+        this.http.get('./i18n/en.json').map((res: Response) => res.json()).subscribe(
+            data => {
+                localStorage.setItem('Messages', JSON.stringify(data));
+            }
+        );
+        if (url == null || url === undefined || url === "undefined") {
+        } else {
+
+        }
+    }
+    GetJsonForSpanish() {
+        let url = localStorage.getItem('APIUrl');
+        this.http.get('./i18n/es.json').map((res: Response) => res.json()).subscribe(
+            data => {
+                localStorage.setItem('Messages', JSON.stringify(data));
+            }
+        );
+        if (url == null || url === undefined || url === "undefined") {
+        } else {
+
+        }
+    }
+
+
+    clearlocalstorage() {
+        let WeboldAppVersion = localStorage.getItem('WeboldAppVersion');
+        let WebAppVersion = JSON.parse(localStorage.getItem('WebAppVersion'));
+    }
+    GetoldWebAppVersion() {
+        let results = '';
+        try {
+            results = localStorage.getItem('WeboldAppVersion');
+        } catch (error) {
+            results = '0.0.0';
+        }
+        return results;
+    }
+
+
+    GetAPI(url: string) {
+        if (this.baseurl == null || this.baseurl === undefined || this.baseurl === "") {
+            this.SetAPIUrl();
+        }
+        let headers = new Headers({ 'Content-Type': 'application/x-www-form-urlencoded' });
+        return this.http.get(this.baseurl + url, { headers: headers }).map((res: Response) => res.json()).finally(() => {
+        });
+    }
+
+    GetAPICall(url: string, options: RequestOptions) {
+        return this.http.get(url, options).map((res: Response) => res.json()).finally(() => {
+        });
+    }
+
+    GetWebAppVersion() {
+        if (this.baseurl == null || this.baseurl === undefined || this.baseurl === "") {
+            this.SetAPIUrl();
+        }
+        let results = '';
+        try {
+            results = JSON.parse(localStorage.getItem('WebAppVersion'));
+        } catch (error) {
+            results = '0.0.0';
+        }
+        return results;
+    }
+
+    GetClientName() {
+        if (this.baseurl == null || this.baseurl === undefined || this.baseurl === "") {
+            this.SetAPIUrl();
+        }
+        let results = '';
+        try {
+            results = JSON.parse(localStorage.getItem('ClientName'));
+        } catch (error) {
+            results = '';
+        }
+        return results;
+    }
+
+    UploadFiles(url: string, obj: FormData) {
+        if (this.baseurl == null || this.baseurl === undefined || this.baseurl === "") {
+            this.SetAPIUrl();
+        }
+
+        let headers = new Headers();
+        let options = new RequestOptions({ headers: headers });
+        return this.http.post(this.baseurl + url, obj, options).map((res: Response) => res.json());
+    }
+
+
+    UploadFilesChart(url: string, obj: object) {
+        if (this.baseurl == null || this.baseurl === undefined || this.baseurl === "") {
+            this.SetAPIUrl();
+        }
+
+        let headers = new Headers();
+        let options = new RequestOptions({ headers: headers });
+        return this.http.post(this.baseurl + url, obj, options).map((res: Response) => res.json());
+    }
+
+    PostAPIWithObject(url: string, obj: Object) {
+        if (this.baseurl == null || this.baseurl === undefined || this.baseurl === "") {
+            this.SetAPIUrl();
+        }
+        let body = JSON.stringify(obj);
+        let headers = new Headers({ 'Content-Type': 'application/x-www-form-urlencoded' });
+        let options = new RequestOptions({ headers: headers });
+        return this.http.post(this.baseurl + url, body, options).map((res: Response) => res.json()).finally(() => {
+        });
+    }
+
+    PostCaptureFormData(url: string, formData: FormData, obj: Object) {
+        if (this.baseurl == null || this.baseurl === undefined || this.baseurl === "") {
+            this.SetAPIUrl();
+        }
+        let body = JSON.stringify(obj);
+        formData.append('body', body);
+        let headers = new Headers();
+        let options = new RequestOptions({ headers: headers });
+        return this.http.post(this.baseurl + url, formData, options).map((res: Response) => res.json()).finally(() => {
+        });
+    }
+
+    PostAPIWithbody(url: string, obj: Object) {
+        if (this.baseurl == null || this.baseurl === undefined || this.baseurl === "") {
+            this.SetAPIUrl();
+        }
+        let body = JSON.stringify(obj);
+        let headers = new Headers({ 'Content-Type': 'application/x-www-form-urlencoded' });
+        let options = new RequestOptions({ headers: headers });
+        return this.http.post(this.baseurl + url, body, options).map((res: Response) => res.json()).finally(() => {
+        });
+    }
+
+    PostAPI(url: string) {
+        if (this.baseurl == null || this.baseurl === undefined || this.baseurl === "") {
+            this.SetAPIUrl();
+        }
+        let headers = new Headers({ 'Content-Type': 'application/json' });
+        headers.append('Accept', 'q=0.8;application/json;q=0.9');
+        return this.http.post(this.baseurl + url, null, null).map((res: Response) => res.json());
+    }
+
+    SetPreviousUrl(obj: string) {
+        sessionStorage.setItem('PreviousUrl', JSON.stringify(obj));
+    }
+
+    SetEstablismentIdforSatusIcon(obj: string) {
+        sessionStorage.setItem('EstablismentIdforSatusIcon', JSON.stringify(obj));
+    }
+
+    SetIdforSatusIcon(obj: object) {
+        sessionStorage.setItem('SetIdforSatusIcon', JSON.stringify(obj));
+    }
+    GetIdforSatusIcon() {
+        if (sessionStorage.getItem('SetIdforSatusIcon') !== null) {
+            return JSON.parse(sessionStorage.getItem('SetIdforSatusIcon'));
+        }
+    }
+
+    GetEstablismentIdforSatusIcon() {
+        let result = JSON.parse(sessionStorage.getItem('EstablismentIdforSatusIcon'));
+        return result
+    }
+
+    SetCaptureFormFilledValues(formvalue: Object) {
+        sessionStorage.setItem('CaptureFormValue', JSON.stringify(formvalue));
+    }
+
+    SetFormMapLatitudeLongitudeValues(formvalue: Object) {
+        sessionStorage.setItem('FormReportIdList', JSON.stringify(formvalue));
+    }
+
+    GetFormMapLatitudeLongitudeValues() {
+        try {
+            if (sessionStorage.getItem('FormReportIdList') !== null) {
+                return JSON.parse(sessionStorage.getItem('FormReportIdList'));
+            }
+        } catch (error) {
+            return null;
+        }
+    }
+
+    RemoveCaptureFormFilledValues() {
+        sessionStorage.removeItem('CaptureFormValue');
+    }
+
+    SetIsForListView(obj: Object) {
+        sessionStorage.setItem('IsForListView', JSON.stringify(obj));
+    }
+    
+    GetIsForListView() {
+        try {
+            if (sessionStorage.getItem('IsForListView') !== null) {
+                return JSON.parse(sessionStorage.getItem('IsForListView'));
+            }
+        } catch (error) {
+            return null;
+        }
+    }
+
+
+    SetTaskActivity(obj: Object) {
+        sessionStorage.setItem('TaskActivityAttchnmentLimit', JSON.stringify(obj));
+    }
+
+    RemoveIsForListView() {
+        sessionStorage.removeItem('IsForListView');
+    }
+
+    GetTaskActivityLimit() {
+        try {
+            if (sessionStorage.getItem('TaskActivityAttchnmentLimit') !== null) {
+                return JSON.parse(sessionStorage.getItem('TaskActivityAttchnmentLimit'));
+            }
+        } catch (error) {
+            return null;
+        }
+    }
+    GetCaptureFormFilledValues() {
+        try {
+            if (sessionStorage.getItem('CaptureFormValue') !== null) {
+                return JSON.parse(sessionStorage.getItem('CaptureFormValue'));
+            }
+        } catch (error) {
+            return null;
+        }
+    }
+
+    GetPreviousUrl() {
+        try {
+            if (sessionStorage.getItem('PreviousUrl') !== null) {
+                return JSON.parse(sessionStorage.getItem('PreviousUrl'));
+            }
+        } catch (error) {
+            return '';
+        }
+    }
+
+    SetAnalysisUserList(obj: Object) {
+        sessionStorage.setItem('AnalysisUser', JSON.stringify(obj));
+    }
+
+    SetAnalysisEstablishmentList(obj: Object) {
+        sessionStorage.setItem('AnalysisEstablishment', JSON.stringify(obj));
+    }
+
+    GetAnalysisUserList() {
+        if (sessionStorage.getItem('AnalysisUser') !== null) {
+            return JSON.parse(sessionStorage.getItem('AnalysisUser'));
+        }
+    }
+
+    GetAnalysisEstablishmentList() {
+        if (sessionStorage.getItem('AnalysisEstablishment') !== null) {
+            return JSON.parse(sessionStorage.getItem('AnalysisEstablishment'));
+        }
+    }
+
+    SetCurrentLoginToken(userToken: string) {
+        localStorage.setItem('currentUserToken', JSON.stringify(userToken));
+    }
+
+    SetUserInfo(obj: Object) {
+        localStorage.setItem('UserInfo', JSON.stringify(obj));
+    }
+
+    SetCurrentEstablishmentName(obj: string) {
+        sessionStorage.setItem('EstablishmentName', JSON.stringify(obj));
+    }
+
+    GetCurrentEstablishmentName() {
+        if (sessionStorage.getItem('EstablishmentName') !== null) {
+            return JSON.parse(sessionStorage.getItem('EstablishmentName'));
+        }
+    }
+
+    SetCurrentActivityInfo(obj: Object) {
+        sessionStorage.setItem('ActivityInfo', JSON.stringify(obj));
+    }
+
+    SetCurrentActivityInfoCount(obj: Object) {
+        sessionStorage.setItem('ActivityInfoCount', JSON.stringify(obj));
+    }
+
+
+    GetCurrentActivityInfo() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results;
+        }
+    }
+
+    GetAllEstablishmentStatusIconByActivity() {
+        if (sessionStorage.getItem('EstablishmentStatusIcon') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('EstablishmentStatusIcon'));
+            return results;
+        }
+    }
+
+
+    SetCurrentActivityEstablishmentCount(obj: number) {
+        sessionStorage.setItem('CurrentActivityEstablishmentCount', JSON.stringify(obj));
+    }
+
+    GetCurrentActivityEstablishmentCount() {
+        if (sessionStorage.getItem('CurrentActivityEstablishmentCount') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('CurrentActivityEstablishmentCount'));
+            return results;
+        }
+    }
+
+    SetHeaderSettings(obj: string) {
+        sessionStorage.setItem('HeaderSettings', JSON.stringify(obj));
+    }
+    SetAllEstablishmentIconList(obj: Object) {
+        sessionStorage.setItem('EstablishmentStatusIcon', JSON.stringify(obj));
+    }
+    GetAllEstablishmentStatusIcon() {
+        let results = JSON.parse(sessionStorage.getItem('EstablishmentStatusIcon'));
+        return results;
+    }
+    SetThemeImages(obj: string) {
+        sessionStorage.setItem('MobileThemeImages', JSON.stringify(obj));
+    }
+
+    GetMobileGraphWebBackground() {
+        try {
+            let Details = JSON.parse(sessionStorage.getItem('MobileThemeImages'));
+            let results = new List<any>(Details);
+            return results.Where(c => c.FileName === 'WebBg.png').ElementAt(0).ThemeUrl;
+        } catch (error) {
+            return './assets/images/mg-mainbg.jpg';
+        }
+    }
+
+    RemoveCurrentActivityInfo() {
+        sessionStorage.removeItem('ActivityInfo');
+        sessionStorage.removeItem('HeaderSettings');
+    }
+
+    GetActivityId() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['ActivityId'];
+        }
+    }
+
+    GetAllocatActivityId() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['AllocatScreen'];
+        }
+    }
+
+
+    GetPIINStatus() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['PIINStatus'];
+        }
+    }
+
+    GetPIOUTStatus() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['PIOUTStatus'];
+        }
+    }
+
+    GetInFormRefNumberStatus() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['InFormRefNumber'];
+        }
+    }
+
+    GetstatusDisplayTime() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['StatusTimeSetting'];
+        }
+    }
+    GetstatusDisplayfeedbackTime() {
+        let StatusTimeSetting: number
+        StatusTimeSetting = Number(localStorage.getItem('StatusTimeSetting'));
+        return StatusTimeSetting;
+    }
+
+    GetActivityName() {
+        let header: string;
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['ActivityName'];
+        }
+        return header;
+    }
+
+
+    GetActivityBadgeCount() {
+        let header: number;
+        if (sessionStorage.getItem('ActivityInfoCount') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfoCount'));
+            header = results['ActivityCount'];
+        }
+        return header;
+    }
+
+    GetActivityOUTCount() {
+        let header: string;
+        if (sessionStorage.getItem('ActivityInfoCount') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfoCount'));
+            header = results['OutCount'];
+        }
+        return header;
+    }
+
+    GetActivityInCount() {
+        let header: string;
+        if (sessionStorage.getItem('ActivityInfoCount') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfoCount'));
+            header = results['InCount'];
+        }
+        return header;
+    }
+
+
+    GetActivityResponseCount() {
+        let header: string;
+        if (sessionStorage.getItem('ActivityInfoCount') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfoCount'));
+            header = results['ResponseCount'];
+        }
+        return header;
+    }
+
+    GetActivityLastday() {
+        let header: number;
+        if (sessionStorage.getItem('ActivityInfoCount') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfoCount'));
+            header = results['LastDays'];
+        }
+        return header;
+    }
+
+
+    TaskAllocationDisplyName() {
+        let header = 'Task Allocation';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Task Allocation'];
+        }
+        return header;
+    }
+
+    ImportButtonDisplyName() {
+        let header = 'import';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['import Unallocated'];
+        }
+        return header;
+    }
+
+    AllocateButtonDisplyName() {
+        let header = 'Allocate';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Allocate'];
+        }
+        return header;
+    }
+
+    UnAllocatedDisplyName() {
+        let header = 'Unallocated';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Unallocated'];
+        }
+        return header;
+    }
+
+    RecoverDisplyName() {
+        let header = 'Recover';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Recover'];
+        }
+        return header;
+    }
+
+    AssignToUserDisplyName() {
+        let header = 'Assign To User';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Assign To User'];
+        }
+        return header;
+    }
+
+    importUnallocatedDisplyName() {
+        let header = 'Import History';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Import History'];
+        }
+        return header;
+    }
+    SelectDateDisplyName() {
+        let header = 'Select Date';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Select Date'];
+        }
+        return header;
+    }
+
+    SelectDayDisplyName() {
+        let header = 'Select Day';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Select Day'];
+        }
+        return header;
+    }
+
+    SelectStatusDisplyName() {
+        let header = 'Select Status';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Select Status'];
+        }
+        return header;
+    }
+
+    UnresolvedCount() {
+        let header = 'Unresolved';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Unresolved Count'];
+        }
+        return header;
+    }
+
+    SelectEstablishment() {
+        let header = 'Select Establishment';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Select Establishment'];
+        }
+        return header;
+    }
+
+    SelectUser() {
+        let header = 'Select User';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Select User'];
+        }
+        return header;
+    }
+
+    CaptureGraphDisplyName() {
+        let header = 'All Capture Form';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Capture Product Issue'];
+        }
+        return header;
+    }
+    
+    FixedCaptureGraphDisplyName() {
+        let header = 'Resolve Capture Form';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Product Issue to be Fixed'];
+        }
+        return header;
+    }
+
+    UnresolveCaptureGraphDisplyName() {
+        let header = 'Unresolved Capture Form';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Unresolved Product Issue'];
+        }
+        return header;
+    }
+
+    ResponseFormDisplyName() {
+        let header = 'Response Form';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Response Form'];
+        }
+        return header;
+    }
+    
+
+    UserActivityDisplyName() {
+        let header = 'User Activity';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['User activity'];
+        }
+        return header;
+    }
+
+    WorkStatusDisplyName() {
+        let header = 'Work Status';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Work Status'];
+        }
+        return header;
+    }
+
+    GetActivityUnresolved() {
+        let header: string;
+        if (sessionStorage.getItem('ActivityInfoCount') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfoCount'));
+            header = results['UnresolveCount'];
+        }
+        return header;
+    }
+
+    GetActivityPathUrl() {
+        let header: string;
+        if (sessionStorage.getItem('ActivityInfoCount') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfoCount'));
+            header = results['Pathurl'];
+        }
+        return header;
+    }
+    GetActivityImagePath() {
+        let header: string;
+        if (sessionStorage.getItem('ActivityInfoCount') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfoCount'));
+            header = results['ActivityImagePath'];
+        }
+        return header;
+    }
+
+    GetCurrentActivityType() {
+        let header: string = 'Sale';
+        try {
+            if (sessionStorage.getItem('ActivityInfo') !== null) {
+                let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+                header = results['ActivityType'];
+            }
+        } catch (error) {
+            console.log(error);
+        }
+        return header.toLowerCase();
+    }
+    CurrentActivityTypeNotification() {
+        try {
+            if (localStorage.getItem('CurrentActivityType') != null) {
+                let results = localStorage.getItem('CurrentActivityType');
+                return results
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+
+    GetCurrentUserEstablishmentType() {
+        let header: string;
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['UserEstablishmentType'];
+        }
+        return header.toLowerCase();
+    }
+
+    GetHasTellUsActivity() {
+        let header: boolean;
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['TellUsActivity'];
+        }
+        return header;
+    }
+
+    GetAllowRecurring() {
+        let recurring: boolean;
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            recurring = results['AllowRecurring'];
+        }
+        return recurring;
+    }
+
+    GetTellUsSubmitted() {
+        let header: boolean;
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['TellUsSubmitted'];
+        }
+        return header;
+    }
+
+    GetIsTellUsActivity() {
+        let header: boolean;
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['IsTellUsActivity'];
+        }
+        return header;
+    }
+
+    GetCaptureFormId() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['SeenClientId'];
+        }
+    }
+    GetContactFormId() {
+        if (localStorage.getItem('UserInfo') !== null) {
+            let results = JSON.parse(localStorage.getItem('UserInfo'));
+            return results['ContactFormId'];
+        }
+    }
+
+    GetQuestionnaireFormId() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['QuestionnaireId'];
+        }
+    }
+
+    GetQuestionnaireType() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['UserEstablishmentType'];
+        }
+    }
+
+    GetQuestionnaireTypeFordashboard() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['QuestionnaireType'];
+        }
+    }
+
+    GetFeedbackButtonDisplay() {
+        let header = '';
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['FeedbackDisplayName'];
+        }
+        return header;
+    }
+
+    GetAttachmentLimit() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['AttachmentLimit'];
+        }
+    }
+
+    GetAutoSaveLimit() {
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            return results['AutoSaveLimit'];
+        }
+    }
+
+    GetAnalysisButtonDisplay() {
+        let header = '';
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['AnalysisDisplayName'];
+        }
+        return header;
+    }
+
+    GetCaptureButtonDisplay() {
+        let header = '';
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['CaptureDisplayName'];
+        }
+        return header;
+    }
+
+    ///------------ Get Header Settings Data ----------------------------------------------------------
+    GetFeedbackDisplayName() {
+        let header = 'Feedback';
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['FeedbackDisplayName'];
+        }
+        return header == '' ? 'Feedback' : header;
+    }
+
+    GetCaptureDisplayName() {
+        let header = 'Capture';
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['CaptureDisplayName'];
+        }
+        return header == '' ? 'Capture' : header;
+    }
+
+    GetSnapshotDisplayName() {
+        let header = 'Snapshot';
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            if (results['SnapshotDisplayName'] !== '') {
+                header = results['SnapshotDisplayName'];
+            }
+        }
+        return header == '' ? 'Snapshot' : header;
+    }
+
+    GetAnalysisDisplayName() {
+        let header = 'Analysis';
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['AnalysisDisplayName'];
+        }
+        return header == '' ? 'Analysis' : header;
+    }
+
+    GetActivitiesDisplayName() {
+        let header = '';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Activities'];
+        }
+        return header;
+    }
+
+    GetSelectContactDisplayName() {
+        let header = '';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Select Contact'];
+        }
+        return header == null ? 'Select Contact' : header;
+    }
+
+
+    GetAddContactDisplayName() {
+        let header = 'Add Contact';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Add Contact'];
+        }
+        return header;
+    }
+
+    GetContactInfoDisplayName() {
+        let header = 'Contact Info';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Contact Info'];
+        }
+        return header == null ? 'Contact Info' : header;
+    }
+
+    GetPreviousFormsDisplayName() {
+        let header = 'Previous Forms';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Previous Forms'];
+        }
+        return header;
+    }
+
+    GetCaptureNewDisplayName() {
+        let header = 'Capture New';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Capture New'];
+        }
+        return header == null ? 'Capture New' : header;
+    }
+
+    GetSelectUserDisplayName() {
+        let header = 'User';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Select User'];
+        }
+        return header;
+    }
+
+    GetEstablishmentDisplayName() {
+        let header = 'Select Establishment';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Select Establishment'];
+        }
+        return header == null ? 'Select Establishment' : header;
+    }
+
+    GetFeedbackListDisplayName() {
+        let header = 'Feedbacks';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Feedback List'];
+        }
+        return header;
+    }
+
+    GetINDisplayName() {
+        let header = 'IN';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['IN'];
+        }
+        return header;
+    }
+
+    GetOUTDisplayName() {
+        let header = 'OUT';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['OUT'];
+        }
+        return header;
+    }
+
+    GetDetailedFeedbackDisplayName() {
+        let header = 'Detailed Feedback';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Detailed Feedback'];
+        }
+        return header;
+    }
+
+    GetOUTFormSectionDisplayName() {
+        let header = 'OUT';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['OUT Form Section'];
+        }
+        return header;
+    }
+
+    GetINFormSectionDisplayName() {
+        let header = 'IN';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['IN Form Section'];
+        }
+        return header;
+    }
+
+    GetActionScreenDisplayName() {
+        let header = 'Action';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Action Screen'];
+        }
+        return header;
+    }
+
+    GetMapScreenDisplayName() {
+        let header = 'Map';
+        if (sessionStorage.getItem('HeaderSettings') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('HeaderSettings'));
+            header = results['Map Screen'];
+        }
+        return header;
+    }
+
+    ///------Get Theme Images------------------------------------------------------------------------
+    GetWebBackgroundForActivity() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            let results = new List<any>(Details['ThemeImages']);
+            return './assets/images/main-bgb.png';
+        } catch (error) {
+            return './assets/images/mg-mainbg.jpg';
+        }
+    }
+
+    GetWebBackground() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            let results = new List<any>(Details['ThemeImages']);
+            return results.Where(c => c.FileName === 'WebBg.png').ElementAt(0).ThemeUrl;
+        } catch (error) {
+            return './assets/images/mg-mainbg.jpg';
+        }
+    }
+
+    GetWebBackgroundThem() {
+        try {
+            let Details = localStorage.getItem('webThem');
+            if (Details == null || Details == undefined || Details == '') {
+                return './assets/images/mg-mainbg.jpg';
+            }
+            else {
+                return Details;
+            }
+        } catch (error) {
+            return './assets/images/mg-mainbg.jpg';
+        }
+    }
+
+
+    GetLoginLogo() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            let results = new List<any>(Details['ThemeImages']);
+            return results.Where(c => c.FileName === 'logologin.png').ElementAt(0).ThemeUrl;
+        } catch (error) {
+            return 'assets/images/mg-logo-white.png';
+        }
+    }
+
+    GetHeaderLogo() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            let results = new List<any>(Details['ThemeImages']);
+            return results.Where(c => c.FileName === 'logohome.png').ElementAt(0).ThemeUrl;
+        } catch (error) {
+            return 'assets/images/mg-logo-white.png';
+        }
+    }
+
+    GetFooterBackground() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            let results = new List<any>(Details['ThemeImages']);
+            return results.Where(c => c.FileName === 'footer.png').ElementAt(0).ThemeUrl;
+        } catch (error) {
+            return 'assets/images/footer-logo.png';
+        }
+    }
+    ///------Get User Info---------------------------------------------------------------------------
+    GetUserInfo(key: string) {
+        let Details = JSON.parse(localStorage.getItem('UserInfo'));
+        return Details[key];
+    }
+
+    GetDashboardTagLine() {
+        let Details = JSON.parse(localStorage.getItem('UserInfo'));
+        return Details['DashboardTagLine'];
+    }
+
+    GetCurrentGroupId() {
+        if (localStorage.getItem('UserInfo') !== null) {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['GroupId'];
+        } else {
+            return 0;
+        }
+    }
+
+    GetCurrentGroupName() {
+        if (localStorage.getItem('UserInfo') !== null) {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['GroupName'];
+        } else {
+            return '';
+        }
+    }
+
+    GetUserId() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['UserId'];
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    GetUserNameId() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['UserName'];
+        } catch (error) {
+            return 0;
+        }
+    }
+
+
+    GetUserIsAreaManager() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['IsAreaManager'];
+        } catch (error) {
+            return false
+        }
+    }
+
+    GetUserIsAllowTaskEditForms() {
+        let Details = JSON.parse(localStorage.getItem('UserInfo'));
+        return Details['IsAllowEditForms'];
+    }
+
+    AcessRemoveFromStatistics() {
+        let Details = JSON.parse(localStorage.getItem('UserInfo'));
+        return Details['Access'];
+    }
+
+    AllowDeleteFeedback() {
+        let Details = JSON.parse(localStorage.getItem('UserInfo'));
+        return Details['AllowDeleteFeedback'];
+    }
+
+    GetAllowChangeContact() {
+        let changecontact: boolean = true;
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            changecontact = Details['AllowChangeContact'];
+        } catch (error) {
+            console.warn(error);
+        }
+        return changecontact;
+    }
+
+    GetIsDefaultContact() {
+        let changecontact: boolean = false;
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            changecontact = Details['IsDefaultContact'];
+        } catch (error) {
+            console.warn(error);
+        }
+        return changecontact;
+    }
+
+
+
+    AllowDatabaseReferenceOption() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['IsNewOptionAllow'];
+        } catch (error) {
+            return false;
+        }
+    }
+
+    AllowImportContacts() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['IsAllowImportContacts'];
+        } catch (error) {
+            return false;
+        }
+    }
+
+    AllowUpdateContacts() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['AllowUpdateContact'];
+        } catch (error) {
+            return false;
+        }
+    }
+
+    AllowReferenceOptionAddNew() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['IsNewOptionAllow'];
+        } catch (error) {
+            return false;
+        }
+    }
+
+    AllowResolveAllRights() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['ResolveAllRights'];
+        } catch (error) {
+            return false;
+        }
+    }
+
+    SetAutoSaveOnOff(obj: any) {
+        localStorage.setItem('AutoSaveOnOff', JSON.stringify(obj));
+    }
+
+    GetAutoSaveId() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('AutoSaveOffDraftId'));
+            return Details;
+        } catch (error) {
+            return '';
+        }
+    }
+
+    SetDarftId(obj: any) {
+        localStorage.setItem('AutoSaveOffDraftId', JSON.stringify(obj));
+    }
+
+    GetAutoSaveOnOff() {
+        try {
+            return JSON.parse(localStorage.getItem('AutoSaveOnOff'));
+        } catch (error) {
+            return false;
+        }
+    }
+
+    GetCurrentUserName() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['UserName'];
+        } catch (error) {
+            return '';
+        }
+    }
+
+    GetCurrentUser() {
+        try {
+            let Details = JSON.parse(localStorage.getItem('UserInfo'));
+            return Details['Name'];
+        } catch (error) {
+            return '';
+        }
+    }
+
+    GetDraftDisplayName() {
+        let header = 'Draft';
+        if (sessionStorage.getItem('ActivityInfo') !== null) {
+            let results = JSON.parse(sessionStorage.getItem('ActivityInfo'));
+            header = results['DraftDisplayName'];
+        }
+        return header == '' ? 'Draft' : header;
+    }
+
+    GetActivityDisplayName() {
+        let Details = JSON.parse(localStorage.getItem('UserInfo'));
+        return Details['ActivityDisplayName'];
+    }
+
+    GetTaskActivityDisplayName() {
+        let Details = JSON.parse(localStorage.getItem('UserInfo'));
+        return Details['TaskActivityDisplayName'];
+    }
+
+    GetAddTaskActivityDisplayName() {
+        let Details = JSON.parse(localStorage.getItem('TaskGroupwiseHederLabel'));
+        return Details['AddTaskActivityDisplayName'];
+    }
+
+    GetAllocatedTaskActivityDisplayName() {
+        let Details = JSON.parse(localStorage.getItem('TaskGroupwiseHederLabel'));
+        return Details['AllocatedTaskActivityDisplayName'];
+    }
+
+    GetTaskActivityLabelName() {
+        let Details = JSON.parse(localStorage.getItem('TaskGroupwiseHederLabel'));
+        return Details['TaskActivityLabelDisplayName'];
+    }
+
+    GetTaskEstablishmentLabelName() {
+        let Details = JSON.parse(localStorage.getItem('TaskGroupwiseHederLabel'));
+        return Details['TaskEstablishmentLabelDisplayName'];
+    }
+
+    checkCredentials() {
+        if (localStorage.getItem('UserInfo') === null) {
+            this._router.navigate(['mainlogin']);
+        }
+    }
+
+    ClearSession() {
+        localStorage.clear();
+        sessionStorage.clear();
+    }
+
+    AllowExportData() {
+        let Details = JSON.parse(localStorage.getItem('UserInfo'));
+        return Details['AllowExportData'];
+    }
+
+
+    ///-------Get Selected or Active Tab Status Name
+
+    GetActiveTabLable() {
+        try {
+            let Details = localStorage.getItem('TabInfo');
+            return Details;
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    SetActiveTabInfo(obj: Object) {
+        localStorage.setItem('TabInfo', JSON.stringify(obj));
+    }
+
+
+    ///------Encode/Decode Url---------------------------------------------------------------------------
+    EncodeHex(str: any) {
+        var result = '';
+        var data = str.toString();
+        for (var i = 0; i < data.length; i++) {
+            var hex = data.charCodeAt(i).toString(16);
+            result += (hex + "00").slice(-4);
+        }
+        return result;
+    }
+    DecodeHex(str: any) {
+        var result = '';
+        for (var i = 0; i < str.length; i += 4) {
+            result += String.fromCharCode(parseInt(str.substr(i, 2), 16));
+        }
+        return result;
+    }
+
+
+
+    // tslint:disable-next-line:eofline
+};
