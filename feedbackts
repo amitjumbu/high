@@ -1,0 +1,2341 @@
+import { Component, OnInit, ElementRef, Renderer2, Renderer, NgZone, ViewChild, Output, EventEmitter } from '@angular/core';
+import { FormArray, FormBuilder, FormControl, FormGroup, AbstractControl } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { APIService } from '../services/APIService';
+import { AppComponent } from '../app.component';
+import { MdDialog, MdSnackBar, MdSelect, fadeInContent } from '@angular/material';
+import { Md2Dialog } from 'md2';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/filter';
+import { TranslateService } from 'ng2-translate/ng2-translate';
+import { MessageService } from '../services/MessageService'
+import { delay } from 'q';
+import { RequestOptions, ResponseContentType } from '@angular/http';
+class FeedbackListRequest {
+    
+    AppUserId: number;
+    GroupId: number;
+    ActivityId: number;
+    HasAreaManager: boolean;
+    QuestionnaireFormId: number;
+    CaptureFormId: number;
+    IsTellUsSubmitted: boolean;
+    QuestionnaireType: string;
+    EstablishmentId: string;
+    UsersId: string;
+    Page: number;
+    Rows: number;
+    FormType: string;
+    FormStatus: string;
+    FormReadUnread: string;
+    FormAction: string;
+    FormActionText: string;
+    FormActionTemplate: string;
+    FormUnreadChat: boolean;
+    FormRecursion: boolean;
+    FormResponseTypeCheckbox: boolean
+    FormResend: boolean;
+    FormTransfer: boolean;
+    FormEdited: boolean;
+    PIFilter: string;
+    PIFilterValueString: Array<any> = [];
+    Search: string;
+    SmileyTypesSortby: string;
+    FromDate: string;
+    ToDate: string;
+    HasForMobile: boolean;
+    ReportId: number;
+    HasIsOut: boolean;
+    FilterOn: string;
+    QuestionId: number;
+    HasAdvanceSearch: boolean;
+    QuestionSearch: string;
+    SortBy: string;
+    FormResponseType: string;
+    FormIsResponse: boolean;
+    PIINStatus: boolean;
+    PIOUTStatus: boolean;
+    IsFlag: boolean;
+    InFormRefNumber: boolean;
+    PIFormTypeValue : string;
+}
+interface RemoveFromStatisticsList {
+    FormType: string;
+    ReportId: number;
+    HasDisable: boolean;
+    AppUserId: number;
+}
+class FeedbackMapDataList {
+    TotalPages: string;
+    MapMarkerRows: Array<MapMarkers>;
+    TotalRecord: number;
+    Start: number;
+    End: number;
+}
+class MapMarkers {
+    MakerTitle: string;
+    data: string;
+    lat: number;
+    lng: number;
+}
+class FilterQuestion {
+    QuestionId = 0;
+    QuestionTypeId = 0;
+    QuestionName = '';
+    Required = false;
+    Hint = '';
+    Answer = '';
+}
+class SatusiconRequest {
+    lgReportId: number;
+    lgAppUserId: number;
+    strUserName: string = '';
+    strPassword: string = '';
+    lgStatusId: number;
+    statusDateTime: Date
+    Latitude: string = '';
+    Longitude: string = '';
+    lgEstablishmentId: number = 0;
+}
+class SatusiconNotificationRequest {
+    public EncodeReportId: string;
+    public EncodeModuleId: string;
+    public lgAppUserId: number;
+    public strConversation: string;
+    public blIsOut: boolean;
+    public strReminderDate: string;
+    public IsCloseLoopAction: boolean;
+    public fileName: string;
+    public strAlertAppUser: string;
+    public StrTypeEmailSMS: number;
+    public StrMobileNumber: string;
+    public strAlertAppCustomer: string;
+    public strEmail: string;
+}
+
+
+@Component({
+    selector: 'feedbacklist',
+    templateUrl: '../template/feedbacklist.html',
+    styles: ['ol{margin: 0;padding: 0;line-height: 18px;margin-top: 4px;}'],
+    providers: [APIService, Md2Dialog]
+})
+
+export class FeedbackList implements OnInit {
+    
+    @ViewChild('alertmd2dialog') alertDialog: Md2Dialog;
+    @ViewChild('mySelect') mySelect: MdSelect;
+    DefaultLat: number = 0.00;
+    DefaultLng: number = 0.00;
+    scrollLeft: number;
+    scrollTop: string;
+    FeedbackMapDataListResponse: FeedbackMapDataList = new FeedbackMapDataList();
+    TransferEstablishment: string = '';
+    TransferApplicationUsers: string = '';
+    TransferEstablishmentList: any[];
+    TransferApplicationUserList: any[];
+    dialogalertdeader: string = '';
+    dialogalertmessage: string = '';
+    displayMode: string = 'default';
+    multi: boolean = false;
+    hideToggle: boolean = false;
+    PIINStatus: boolean = false;
+    PIOUTStatus: boolean = false;
+    InFormRefNumber: boolean = false;
+    checkedPIFilterToggle: boolean = false;
+    FilterToggle: boolean = false;
+    filterselected: boolean = false;
+    showPanel3 = true;
+    acessremovefromstatistic: boolean = false;
+    allowdeleteform: boolean = false;
+    AllowExportData: boolean = false;
+    ResolveAllRights: boolean = false;
+    IsCustomerType: boolean = true;
+    InOutFormList: Array<any> = [];
+    formdeleterequest: any;
+    formtransferrequest: any;
+    PIFilterValue: Array<any> = [];
+    CaptureButtonDisplay: boolean = false;
+    DisplayfromDate: Date = new Date();
+    DisplaytoDate: Date = new Date();
+    PositiveCountLabel: string = 'Positive';
+    NeutralCountLabel: string = 'Neutral';
+    NegativeCountLabel: string = 'Negative';
+    UnresolvedCountLabel: string = 'Unresolved';
+    PositiveCount: number = 0;
+    NeutralCount: number = 0;
+    NegativeCount: number = 0;
+    UnresolvedCount: number = 0;
+    TotalCount: number = 0;
+    TotalPages: number = 0;
+    pageNo: number = 1;
+    rowsNo: number;
+    searchfieldsModel: FormGroup;
+    searchfields: any[];
+    EstablishmentList: Array<any> = [];
+    AllEstablishmentList: Array<any> = [];
+    selectedEstablishmentValue: Array<any> = [];
+    ApplicationUsersList: Array<any> = [];
+    AllApplicationUsersList: Array<any> = [];
+    selectedUserValue: Array<any> = [];
+    UsersTextSearch: string = null;
+    FeedBackFormQuestionList: Array<any> = [];
+    CaptureFormQuestionList: Array<any> = [];
+    FeedBackFormOptionsList: Array<any> = [];
+    CaptureFormOptionsList: Array<any> = [];
+    FormQuestionList: Array<any> = [];
+    FormTypeQuestionList: Array<any> = [];
+    FilterQuestionList: FilterQuestion[] = [];
+    questionSearchArray: Array<any> = [];
+    InOutFormType: boolean = true;
+    datetimetype: string = 'datetime';
+    startViewmonth: string = 'month';
+    modeportrait: string = 'portrait';
+    fromDate: any;
+    date: any;
+    todate: any;
+    minDate: string = '';
+    maxDate: string = '';
+    formatDate: string = 'dd/MMM/yy HH:mm';
+    IsFormAction: boolean = false;
+    ActionTemplateList: any[];
+    FeedbackListDisplayName: string = 'Feedback List';
+    establishmentListDisplayName: string = 'Select Establishment';
+    UserListDisplayName: string = 'Select User';
+    jqGridContactName: string = 'Select Contact';
+    contactInfoName: string = 'Contact Info';
+    previousFormsName: string = 'Previous Forms';
+    captureNewName: string = 'Capture New';
+    OutName: string = 'OUT';
+    InName: string = 'IN';
+    currentActivityName: string = '';
+    selectedIndex: number = 4;
+    buttonselectedIndex: number = 1;
+    buttonSearchIndex: number = 1;
+    TextSearch: string;
+    FormStatusType: string = 'Unresolved';
+    FormSortType: string = '';
+    RemoveFromStatisticsLabel: string = 'Disable';
+    Displaylabel: string = null;
+    RemoveFromStatisticdisabled: boolean = true;
+    RemoveFromStatisticsListModel: RemoveFromStatisticsList[];
+    SelectOneForm: boolean = false;
+    formlistrequest: FeedbackListRequest;
+    currentFormReportid: number = 0;
+    currentFormIsOut: boolean = false;
+    currentFormUserId: string = '';
+    fdlisttype: string = '';
+    NoDataDisplay: boolean = false;
+    SelectAllUser: Array<any> = [];
+    SelectAllEstablishment: Array<any> = [];
+    MaxValues: boolean = false;
+    appSeluser: any[] = [];
+    vals: any[] = [];
+    searchvales: number = 0;
+    selectedNotificationFlagId: any[] = [];
+    SelectCheckboxFlag: any = null;
+    listoffalg: any
+    selectedNotificationFlagUnfalgId: any[] = [];
+    flag: any;
+    url: string;
+    SearchText: string = '';
+    FilterDate: string = '';
+    public show: boolean = false;
+    CurrentActivityTypeIN: number;
+    CurrentActivityTypeout: number;
+    QuestionTypeId: number;
+    statusIconreq: SatusiconRequest;
+    StatusTimeSetting: number;
+    geolocationlatitude: any;
+    geolocationlongitude: any;
+    GetAllEstablishmentStatusIcon: any[]
+    GetAllEstablishmentStatus: any[];
+    CurrentStatusList: any[];
+    Message: string;
+    esId: number;
+    CurrenttatusId: number;
+    PIFormTypeValue: boolean = false;    
+    PIFormType: string = 'Out';
+    eleValue: string;
+    actId: number = 0;
+    ActivityType: string;
+    constructor(
+        private ngZone: NgZone,
+        private elementRef: ElementRef,
+        private renderer: Renderer2,
+        private _renderer: Renderer,
+        private appc: AppComponent,
+        private fb: FormBuilder,
+        private activatedRoute: ActivatedRoute,
+        private router: Router,
+        private route: ActivatedRoute,
+        private apiservice: APIService,
+        private alert: Md2Dialog,
+        private dialog: MdDialog,
+        public snackBar: MdSnackBar,
+        private translate: TranslateService,
+        private messageService: MessageService) {
+        this.route
+            .queryParams
+            .subscribe(params => {
+                this.fdlisttype = (params['type'] != undefined) ? this.apiservice.DecodeHex(params['type']) : params['type'] || '';
+                this.actId = (params['aid'] != undefined) ? parseInt(this.apiservice.DecodeHex(params['aid'])) : parseInt(params['aid']) || this.apiservice.GetActivityId();
+                this.ActivityType = (params['acttype'] != undefined) ? this.apiservice.DecodeHex(params['acttype']) : params['acttype'] || this.apiservice.GetQuestionnaireType();
+            });
+
+        this.RemoveFromStatisticsListModel = [];
+        this.appc.isLogin = true;
+        this.acessremovefromstatistic = this.apiservice.AcessRemoveFromStatistics();
+        this.allowdeleteform = this.apiservice.AllowDeleteFeedback();
+        this.AllowExportData = this.apiservice.AllowExportData();
+        this.ResolveAllRights = this.apiservice.AllowResolveAllRights();
+        this.dialogalertdeader = this.apiservice.GetCurrentGroupName();
+        this.appc.currentUser = this.apiservice.GetCurrentUser();
+        this.appc.WebAppBackGround = 'url(' + this.apiservice.GetWebBackground() + ') no-repeat center top';
+        this.FeedbackListDisplayName = this.apiservice.GetFeedbackListDisplayName();
+        this.establishmentListDisplayName = this.apiservice.GetEstablishmentDisplayName();
+        this.UserListDisplayName = this.apiservice.GetSelectUserDisplayName();
+        this.jqGridContactName = this.apiservice.GetSelectContactDisplayName();
+        this.contactInfoName = this.apiservice.GetContactInfoDisplayName();
+        this.previousFormsName = this.apiservice.GetPreviousFormsDisplayName();
+        this.captureNewName = this.apiservice.GetCaptureNewDisplayName();
+        this.OutName = this.apiservice.GetOUTDisplayName();
+        this.InName = this.apiservice.GetINDisplayName();
+        this.currentActivityName = this.apiservice.GetActivityName();
+        let CurrentActivityType = this.apiservice.GetCurrentActivityType();
+        this.PIINStatus = this.apiservice.GetPIINStatus();
+        this.PIOUTStatus = this.apiservice.GetPIOUTStatus();
+        this.InFormRefNumber = this.apiservice.GetInFormRefNumberStatus();
+        this.StatusTimeSetting = this.apiservice.GetstatusDisplayTime();
+        if (CurrentActivityType === 'customer') {
+            this.IsCustomerType = false;
+        }
+        let CaptureButtonDisplay = this.apiservice.GetCaptureButtonDisplay();
+        if (CaptureButtonDisplay !== '') {
+            this.CaptureButtonDisplay = true;
+        }
+
+        this.TransferApplicationUserList = [];
+        this.formdeleterequest = {
+            ReportId: 0,
+            IsOut: 0,
+            AppUserId: this.apiservice.GetUserId()
+        };
+        this.formtransferrequest = {
+            ReportId: 0,
+            NewAppUserId: 0,
+            EstablishmentId: 0,
+            IsOut: 0,
+            AppUserId: this.apiservice.GetUserId(),
+        };
+
+        localStorage.removeItem('ActivityPopupId');
+        this.formlistrequest = new FeedbackListRequest;
+        this.formlistrequest.AppUserId = this.apiservice.GetUserId();
+        this.formlistrequest.GroupId = this.apiservice.GetCurrentGroupId();
+        this.formlistrequest.ActivityId = this.actId;
+        this.formlistrequest.HasAreaManager = this.apiservice.GetUserIsAreaManager();
+        this.formlistrequest.QuestionnaireFormId = this.apiservice.GetQuestionnaireFormId();
+        this.formlistrequest.CaptureFormId = this.apiservice.GetCaptureFormId();
+        this.formlistrequest.IsTellUsSubmitted = this.apiservice.GetTellUsSubmitted();
+        this.formlistrequest.QuestionnaireType = this.ActivityType;
+        this.formlistrequest.EstablishmentId = '0';
+        this.formlistrequest.UsersId = '0';
+        this.formlistrequest.Page = this.pageNo;
+        this.formlistrequest.Rows = this.rowsNo;
+        this.formlistrequest.FormType = 'Out';
+        if(this.PIFormTypeValue == true){
+            this.formlistrequest.PIFormTypeValue = 'true';
+        }
+        else{
+            this.formlistrequest.PIFormTypeValue = 'false';
+        }
+        
+
+        switch(this.fdlisttype) { 
+            case 'unresolved': { 
+             this.formlistrequest.FormStatus = 'Unresolved';
+             this.formlistrequest.SmileyTypesSortby = '';
+             this.selectedIndex = 4;
+             this.UnresolvedCountLabel = 'Unresolved';
+               break; 
+            } 
+            case 'NotResponded': {
+             this.formlistrequest.FormStatus = 'Unresolved';
+             this.formlistrequest.FormResponseType = 'NotResponded';
+             this.formlistrequest.FormResponseTypeCheckbox = true
+             this.formlistrequest.FormIsResponse = true;
+             this.filterselected = true;
+             this.UnresolvedCountLabel = 'Unresolved';
+             localStorage.removeItem('FitterValuesSet');
+             break; 
+            } 
+            case 'Resolved': {
+             this.formlistrequest.FormStatus = 'Resolved';
+             this.formlistrequest.SmileyTypesSortby = '';
+             this.UnresolvedCountLabel = 'Resolved';
+               break;    
+            } 
+            default: { 
+             this.formlistrequest.FormStatus = 'false';
+             this.formlistrequest.FormIsResponse = false;
+             this.formlistrequest.FormStatus = 'All';
+             this.formlistrequest.SmileyTypesSortby = '';
+             this.UnresolvedCountLabel = 'All';
+             this.formlistrequest.FormResponseType = 'All';
+             this.fdlisttype = 'All';
+               break;              
+            } 
+         }
+        this.formlistrequest.FormReadUnread = null;
+        this.formlistrequest.FormAction = null;
+        this.formlistrequest.FormActionText = null;
+        this.formlistrequest.FormActionTemplate = null;
+        if (this.fdlisttype === 'uc') {
+            this.formlistrequest.FormUnreadChat = true;
+            this.formlistrequest.SmileyTypesSortby = '';
+            this.UnresolvedCountLabel = 'All';
+            this.fdlisttype = 'uc';
+        } else {
+            this.formlistrequest.FormUnreadChat = false;
+        }
+        this.formlistrequest.FormRecursion = false;
+        if (this.formlistrequest.FormResponseTypeCheckbox) {
+            this.formlistrequest.FormResponseType = 'NotResponded';
+        }
+        else {
+            this.formlistrequest.FormResponseType = 'All';
+        }
+        this.formlistrequest.FormResend = false;
+        this.formlistrequest.FormTransfer = false;
+        this.formlistrequest.FormEdited = false;
+        this.formlistrequest.Search = this.TextSearch;
+        this.formlistrequest.FromDate = '';
+        this.formlistrequest.ToDate = '';
+        this.formlistrequest.HasForMobile = false;
+        this.formlistrequest.HasIsOut = true;
+        this.formlistrequest.FilterOn = '1';
+        this.formlistrequest.QuestionId = 0;
+        this.formlistrequest.HasAdvanceSearch = false;
+        this.formlistrequest.QuestionSearch = null;
+        this.formlistrequest.SortBy = '';
+        if (localStorage.getItem('FitterValuesSet') !== null) {
+            this.filterselected = true;
+            this.formlistrequest = JSON.parse(localStorage.getItem('FitterValuesSet'));
+            if (this.formlistrequest.SortBy == 'LastForm') {
+                this.buttonselectedIndex = 1;
+            }
+            else if (this.formlistrequest.SortBy == 'LastChat') {
+                this.buttonselectedIndex = 2;
+            }
+            else if (this.formlistrequest.SortBy == 'LastChatAll') {
+                this.buttonselectedIndex = 3;
+            }
+            else if(this.formlistrequest.SortBy == ''){
+                this.buttonselectedIndex = 1;
+            }
+            else{
+                this.buttonselectedIndex = 4;
+            }
+        }
+
+        this.listoffalg =
+            {
+                NotificationId: '0',
+                Type: '',
+                IsFlag: '',
+                Id: '0'
+            };
+        this.appc.isLoading = true;
+        if (this.formlistrequest.QuestionSearch == '' || this.formlistrequest.QuestionSearch == null || this.formlistrequest.QuestionSearch == undefined) {
+            this.formlistrequest.FormType = 'All';
+        }
+        this.GetFeedbackListRequest(this.formlistrequest, false);
+    }
+
+    ngOnInit() {
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+        let optvalues: any[] = [];
+        this.searchfieldsModel = this.fb.group({
+            DDEstablishment: new FormControl(optvalues),
+            DDApplicationUsers: new FormControl(optvalues),
+            FormType: new FormControl('All'),
+            selectedFormQuestionValue: new FormControl(''),
+            fromDate: new FormControl(''),
+            toDate: new FormControl(''),
+            referenceNo: new FormControl(null),
+            PIFilter: new FormControl(null),
+            ComparePIFilterMin: new FormControl(''),
+            ComparePIFilterMax: new FormControl(''),
+            FormStatus: new FormControl('All'),
+            FormReadUnread: new FormControl('All'),
+            FormAction: new FormControl(''),
+            FormActionText: new FormControl(''),
+            FormActionTemplate: new FormControl(''),
+            FormUnreadChat: new FormControl(false),
+            FormRecursion: new FormControl(''),
+            FormResponseTypeCheckbox: new FormControl(''),
+            FormResend: new FormControl(''),
+            FormTransfer: new FormControl(''),
+            FormResponseType: new FormControl('All'),
+            FormIsResponse: new FormControl(''),
+            questionLairs: this.fb.array([]),
+            IsFlag: new FormControl(false)
+        });
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                this.geolocationlatitude = position.coords.latitude;
+                this.geolocationlongitude = position.coords.longitude;
+            });
+        } else {
+            this.geolocationlatitude = '0.00';
+            this.geolocationlongitude = '0.00';
+        }
+    }
+
+    applyFilter(event: any, dialog: Md2Dialog, index: number) {
+        if (event.which == 13) {
+            this.onFilterApply(dialog, index)
+        }
+    }
+    ngOnDestroy() {
+    }
+
+    ngAfterViewInit() {
+    }
+
+    Getmaplistdata(formlistrequest: any, isFilterApply: boolean) {
+        try {
+            this.appc.isLoading = true;
+            let url = 'api/v1/Feedbacks/FeedbackMapDataList';
+            this.apiservice.PostAPIWithObject(url, formlistrequest
+            ).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.FeedbackMapDataListResponse = data.Result;
+                        if (this.FeedbackMapDataListResponse.MapMarkerRows != null) {
+                            if (this.FeedbackMapDataListResponse.MapMarkerRows.length > 0) {
+                                this.DefaultLat = this.FeedbackMapDataListResponse.MapMarkerRows[0].lat;
+                                this.DefaultLng = this.FeedbackMapDataListResponse.MapMarkerRows[0].lng;
+                            }
+                        }
+                    } else {
+                        console.warn(data.Message);
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+    RedirectToMobi(MobiFormLink: any, IsReleased: any, IsMobiExpired: any, dialog: any, ReleaseMsg: any, MobiMsg: any, ReportId: any) {
+        if (IsReleased == true) {
+            if (IsMobiExpired == true) {
+                if (MobiMsg !== undefined && MobiMsg !== "" && MobiMsg !== null) {
+                    this.GetDynamicMessages(1, ReportId, dialog);
+                }
+                else {
+                    this.dialogalertmessage = this.messageService.FeedbackListMessage(12); 
+                    dialog.open();
+                }
+            }
+            else {
+                window.open(MobiFormLink, '_blank');
+            }
+        }
+        else {
+            if (ReleaseMsg !== undefined && ReleaseMsg !== "" && ReleaseMsg !== null) {
+                this.GetDynamicMessages(0, ReportId, dialog);
+            }
+            else {
+                this.dialogalertmessage = this.messageService.FeedbackListMessage(11); 
+                dialog.open();
+            }
+        }
+    }
+    GetDynamicMessages(IsForMobi: any, ReportId: any, dialog: any) {
+        try {
+            this.apiservice.GetAPI('api/v1/Feedbacks/GetDynamicMessages?reportId=' + ReportId).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        if(IsForMobi == 1)
+                        {
+                            this.dialogalertmessage = data.Result[0].MobiExpiredValidationMessage;
+                            dialog.open();
+                        }
+                        else
+                        {
+                            this.dialogalertmessage = data.Result[0].ReleaseDateValidationMessage;
+                            dialog.open();
+                        }
+                    } else {
+                        this.appc.isLoading = false;
+                        console.warn(data.Message);
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+    GetFeedbackListRequest(objectRequest: any, isFilterApply: boolean) {
+        this.appc.isLoading = true;
+        this.NoDataDisplay = false;
+        let url = 'api/v1/Feedbacks/FeedbackList';
+        this.apiservice.PostAPIWithObject(url, objectRequest).subscribe(
+            data => {
+                setTimeout(() => {
+                    if (data.Status === 'Success') {                       
+                        this.appc.isLoading = true;
+                        let CurrentActivityType = this.apiservice.GetCurrentActivityType();
+                        if (data.Result != null) {
+                            this.rowsNo = data.Result.PagingRowNumber;
+                          
+                            if (data.Result.TotalRecords === 0) {
+                                this.NoDataDisplay = true;
+                                this.Displaylabel = this.messageService.FeedbackListMessage(1) // 'result found on your search criteria.';
+                                this.InOutFormList = [];
+                            } else {
+                                if (CurrentActivityType.toLowerCase() === 'sales') {
+                                    this.CurrentActivityTypeout = 2
+                                    this.CurrentActivityTypeIN = 1;
+                                }
+                                else {
+                                    this.CurrentActivityTypeIN = 1;
+                                    this.CurrentActivityTypeout = 1
+                                }
+                                this.InOutFormList = data.Result.WebRows;
+                                this.NoDataDisplay = false;
+                            }
+                            this.StatusTimeSetting = this.apiservice.GetstatusDisplayTime();
+                            this.PositiveCount = data.Result.PositiveCount;
+                            this.NeutralCount = data.Result.PassiveCount;
+                            this.NegativeCount = data.Result.NegativeCount;
+                            this.TotalCount = data.Result.TotalRecords;
+                            this.UnresolvedCount = this.TotalCount;
+                            this.FormStatusType = data.Result.SearchFields.SmileyTypesSortby;
+                            this.RemoveFromStatisticsListModel = data.Result.RemoveFromStatisticsListModel;
+                            this.DisplayfromDate = data.Result.SearchFields.FromDateTime;
+                            this.DisplaytoDate = data.Result.SearchFields.ToDateTime;
+                            this.date = data.Result.SearchFields.FromDateTime;
+                            if (isFilterApply) {
+                                if (this.UnresolvedCountLabel === 'Resolved') {
+                                    this.UnresolvedCount = data.Result.ResolvedCount;
+                                }
+                                else if (this.UnresolvedCountLabel === "Unresolved") {
+                                    this.UnresolvedCount = this.TotalCount;
+                                }
+                                else {
+                                    // this.UnresolvedCount = data.Result.UnResolvedCount;
+                                    this.UnresolvedCount = this.TotalCount;
+                                }
+                            }
+                            if (this.fdlisttype == 'Resolved') {
+                                this.UnresolvedCountLabel = 'Resolved';
+                            }
+                            if (!isFilterApply) {
+                                this.searchfields = data.Result.SearchFields;
+                                this.EstablishmentList = data.Result.SearchFields.EstablishmentList;
+                                this.ApplicationUsersList = data.Result.SearchFields.ApplicationUsersList;
+                                this.ActionTemplateList = data.Result.SearchFields.ActionTemplateList;
+                                this.AllEstablishmentList = data.Result.SearchFields.EstablishmentList;
+                                this.AllApplicationUsersList = data.Result.SearchFields.ApplicationUsersList;
+                                this.FeedBackFormQuestionList = data.Result.QuestionSearchModel.FeedBackFormQuestionList;
+                                this.CaptureFormQuestionList = data.Result.QuestionSearchModel.CaptureFormQuestionList;
+                                this.FeedBackFormOptionsList = data.Result.QuestionSearchModel.FeedBackFormOptionsList;
+                                this.CaptureFormOptionsList = data.Result.QuestionSearchModel.CaptureFormOptionsList;
+                                this.TextSearch = data.Result.SearchFields.Search;
+                                let reportId = data.Result.SearchFields.ReportId === 0 ? null : data.Result.SearchFields.ReportId;
+                                let appSel: any[] = [];
+                                let estSel: any[] = [];
+                                let appsrt: string = data.Result.SearchFields.UsersId;
+                                let estsrt: string = data.Result.SearchFields.EstablishmentId;
+                                if (appsrt == null || appsrt === undefined || appsrt === '' || appsrt === '0') {
+                                    appsrt = '0';
+                                } else {
+                                    appSel = appsrt.split(',');
+                                }
+                                if (appsrt == null || estsrt === '' || estsrt === 'undefined' || estsrt === '0') {
+                                    estsrt = '0';
+                                } else {
+                                    estSel = estsrt.split(',');
+                                }
+                                if (data.Result.SearchFields.FormType === "Out") {
+                                    this.FormQuestionList = this.CaptureFormQuestionList;
+                                }
+                                else if (data.Result.SearchFields.FormType === "All") {
+                                    data.Result.SearchFields.FormType = 'Out';
+                                    this.FormQuestionList = this.CaptureFormQuestionList;
+                                }
+
+                                this.searchfieldsModel = this.fb.group({
+                                    DDEstablishment: new FormControl(estSel),
+                                    DDApplicationUsers: new FormControl(appSel),
+                                    fromDate: new FormControl(data.Result.SearchFields.FromDateTime),
+                                    toDate: new FormControl(data.Result.SearchFields.ToDateTime),
+                                    FormType: new FormControl(data.Result.SearchFields.FormType),
+                                    selectedFormQuestionValue: new FormControl(''),
+                                    referenceNo: new FormControl(reportId),
+                                    PIFilter: new FormControl(null),
+                                    ComparePIFilterMin: new FormControl(''),
+                                    ComparePIFilterMax: new FormControl(''),
+                                    FormStatus: new FormControl(data.Result.SearchFields.FormStatus),
+                                    FormResponseType: new FormControl(this.fdlisttype === 'NotResponded' ? 'NotResponded' : this.fdlisttype === 'All' ? 'All' : 'All'),
+                                    FormReadUnread: new FormControl(data.Result.SearchFields.FormReadUnread),
+                                    FormAction: new FormControl(data.Result.SearchFields.FormAction === 'true' ?
+                                        'Action' : data.Result.SearchFields.FormAction === 'false' ? 'UnAction' : ''),
+                                    FormActionText: new FormControl(data.Result.SearchFields.FormActionText),
+                                    FormActionTemplate: new FormControl(data.Result.SearchFields.FormActionTemplate),
+                                    FormUnreadChat: new FormControl(data.Result.SearchFields.FormUnreadChat),
+                                    FormRecursion: new FormControl(data.Result.SearchFields.FormRecursion),
+                                    FormResponseTypeCheckbox: new FormControl(this.formlistrequest.FormResponseTypeCheckbox),
+                                    FormResend: new FormControl(data.Result.SearchFields.FormResend),
+                                    FormTransfer: new FormControl(data.Result.SearchFields.FormTransfer),
+                                    FormIsResponse: new FormControl(data.Result.SearchFields.FormIsResponse),
+                                    IsFlag: new FormControl(data.Result.SearchFields.IsFlag),
+                                    questionLairs: this.fb.array([])
+                                });
+                            }
+                        } else {
+                            this.NoDataDisplay = true;
+                            this.Displaylabel = this.messageService.FeedbackListMessage(1) // 'result found on your search criteria.';
+                            this.InOutFormList = [];
+                        }
+                        this.appc.isLoading = false;
+                    } else {
+                        this.appc.isLoading = false;
+                        this.dialogalertmessage = data.Message;
+                        this.alertDialog.open();
+                    }
+                }, 100);
+            },
+            err => {
+                this.appc.isLoading = false;
+                this.dialogalertmessage = err.Message;
+                this.alertDialog.open();
+            });
+    }
+
+    onElementScroll(event: any) {
+        try {
+            if ((parseInt(event.scrollTop, 10) + parseInt(event.offsetHeight, 10)) >= parseInt(event.scrollHeight, 10)) {
+                    this.pageNo = this.pageNo + 1;
+                    this.appc.isLoading = true;
+                    this.formlistrequest.Page = this.pageNo;
+                    let url = 'api/v1/Feedbacks/FeedbackList';
+                    this.apiservice.PostAPIWithObject(url, this.formlistrequest).subscribe(
+                        data => {
+                            if (data.Status === 'Success') {
+                                if (data.Result != null) {
+                                    this.rowsNo = data.Result.PagingRowNumber;
+                                  
+                                    if (data.Result.TotalRecords === 0) {
+                                        this.NoDataDisplay = true;
+                                        this.InOutFormList = [];
+                                    } else {
+                                        if (this.pageNo > 1) {
+                                          
+                                                let arrayA = this.InOutFormList;
+                                                let arrayB = data.Result.WebRows;
+                                                let newArray = arrayA.concat(arrayB);
+                                                this.InOutFormList = newArray;
+
+                                                let arrayP = this.RemoveFromStatisticsListModel;
+                                                let arrayQ = data.Result.RemoveFromStatisticsListModel;
+                                                let newArrayR = arrayP.concat(arrayQ);
+                                                this.RemoveFromStatisticsListModel = newArrayR;
+                                          
+                                        } else {
+                                            this.InOutFormList = data.Result.WebRows;
+                                            this.RemoveFromStatisticsListModel = data.Result.RemoveFromStatisticsListModel;
+                                        }
+                                        this.NoDataDisplay = false;
+                                    }
+                                    this.PositiveCount = data.Result.PositiveCount;
+                                    this.NeutralCount = data.Result.PassiveCount;
+                                    this.NegativeCount = data.Result.NegativeCount;
+                                    this.TotalCount = data.Result.TotalRecords;
+                                    this.UnresolvedCount = this.TotalCount;
+                                    this.FormStatusType = data.Result.SearchFields.SmileyTypesSortby;
+                                   
+                                    this.DisplayfromDate = data.Result.SearchFields.FromDateTime;
+                                    this.DisplaytoDate = data.Result.SearchFields.ToDateTime;
+
+                                } else {
+                                    this.NoDataDisplay = true;
+                                    this.InOutFormList = [];
+                                    this.dialogalertmessage = data.Message;
+                                    this.alertDialog.open();
+                                }
+                                this.appc.isLoading = false;
+                            } else {
+                                this.appc.isLoading = false;
+                                this.dialogalertmessage = data.Message;
+                                this.alertDialog.open();
+                            }
+                        },
+                        err => {
+                            this.appc.isLoading = false;
+                            this.dialogalertmessage = this.messageService.loginMessage(2) // 'error connecting to server. please try again.';
+                            this.alertDialog.open();
+                        });
+     
+            }
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+
+    OnRefreshList() {
+        try {
+            this.appc.isLoading = true;
+            this.InOutFormList = [];
+            this.PositiveCount = 0;
+            this.NeutralCount = 0;
+            this.NegativeCount = 0;
+            this.TotalCount = 0;
+            this.UnresolvedCount = 0;
+            this.formlistrequest.Page = 1;
+            this.formlistrequest.Rows = 0;
+            this.GetFeedbackListRequest(this.formlistrequest, true);
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+
+    OnClickDateTimeChange() {
+        try {
+            this.Searchfilter();
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+
+    OnClickStatusIcon(EncodeEstablishmentId: string, EncodeReportId: string, alertStatusIcon: Md2Dialog, StatusId: string) {
+        this.dialogalertmessage = '';
+        this.statusIconreq = new SatusiconRequest();
+        this.statusIconreq.lgEstablishmentId = 0
+        this.statusIconreq.lgReportId = 0
+        var establismentIds = this.apiservice.DecodeHex(EncodeEstablishmentId);
+        var report = this.apiservice.DecodeHex(EncodeReportId);
+        this.statusIconreq.lgEstablishmentId = Number(establismentIds);
+        this.statusIconreq.lgReportId = Number(report);
+        this.apiservice.SetIdforSatusIcon(this.statusIconreq);
+        this.esId = Number(establismentIds)
+        this.CurrenttatusId = Number(StatusId);
+        this.GetAllStatusIconEstablishmentId(this.esId, this.CurrenttatusId);
+        this.GetAllEstablishmentStatus = this.apiservice.GetAllEstablishmentStatusIcon();
+        alertStatusIcon.open();
+    }
+
+    MapDisplayallforms() {
+        let urlPath = this.router.url;
+        this.apiservice.SetPreviousUrl(urlPath);
+        this.apiservice.SetFormMapLatitudeLongitudeValues(this.formlistrequest);
+        this.router.navigate(['/formmapdisplay']);
+    }
+
+    MapDisplaySingleForm(reportId: number, isoutform: boolean) {
+        let urlPath = this.router.url;
+        this.apiservice.SetPreviousUrl(urlPath);
+        this.router.navigate(['/formmapdisplay'], {
+            queryParams: {
+                rid: this.apiservice.EncodeHex(reportId),
+                isout: this.apiservice.EncodeHex(isoutform)
+            }
+        });
+    }
+
+    IconMapDisplaySingleForm(reportId: number, isoutform: boolean) {
+        let urlPath = this.router.url;
+        this.apiservice.SetPreviousUrl(urlPath);
+        this.router.navigate(['/statusiconhistorymap'], {
+            queryParams: {
+                rid: this.apiservice.EncodeHex(reportId),
+                isout: this.apiservice.EncodeHex(isoutform),
+                type :this.apiservice.EncodeHex(this.fdlisttype)
+            }
+        });
+    }
+
+    FormReadAuditlog(reportId: number, isoutform: boolean) {
+        let urlPath = this.router.url;
+        this.apiservice.SetPreviousUrl(urlPath);
+        this.router.navigate(['/FromReadLogHistory'], {
+            queryParams: {
+                rid: this.apiservice.EncodeHex(reportId),
+                isout: this.apiservice.EncodeHex(isoutform),
+                type: this.apiservice.EncodeHex(this.fdlisttype)
+            }
+        });
+    }
+
+
+    SnapshotDisplaySingleForm(EncodeReportId: string,
+        EncodeActivityId: string,
+        EstablishmentId: string,
+        UserId: number,
+        IsOut: boolean) {
+        try {
+            let UserIds = this.apiservice.GetUserId();
+            let urlorigin = window.location.origin;
+            window.open(urlorigin
+                + '/snapshotgraphform?erid=' + EncodeReportId
+                + '&eaid=' + EncodeActivityId
+                + '&eeid=' + this.apiservice.EncodeHex(EstablishmentId)
+                + '&uid=' + this.apiservice.EncodeHex(UserIds)
+                + '&isou=' + this.apiservice.EncodeHex(IsOut)
+                + '', '_blank');
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+
+    OnExcelExport(alertbox: Md2Dialog) {
+        let snackBarRef = this.snackBar.open(this.messageService.FeedbackListMessage(2), 'X'); //'please wait while excel downloading...'
+        try {
+            let formData: FormData = new FormData();
+            formData.append('ExcelExportFeedbackList', JSON.stringify(this.formlistrequest));
+            formData.append('AppUserId', JSON.stringify(this.apiservice.GetUserId()));
+            formData.append('QuestionnaireType', JSON.stringify(this.apiservice.GetQuestionnaireType()));
+            this.apiservice.UploadFiles('api/v1/Feedbacks/ExcelExportFeedbackList', formData).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        if (data.Result != null) {
+                            setTimeout(() => {
+                                let APIUrl = localStorage.getItem('APIUrl');
+                                window.open(APIUrl + 'api/v1/Feedbacks/DownLoadExcel?fileName=' + data.Result, '_self');
+                            }, 3000);
+                        }
+                    } else {
+                        this.dialogalertmessage = data.Message;
+                        alertbox.open();
+                    }
+                    snackBarRef.dismiss();
+                },
+                err => {
+                    console.warn(err.Message);
+                    snackBarRef.dismiss();
+                });
+        } catch (error) {
+            console.warn(error);
+            snackBarRef.dismiss();
+        }
+    }
+
+    onchangeGetQyestionType(event: any) {
+        this.QuestionTypeId = 0;
+        this.QuestionTypeId = event;
+    }
+    onFilterApply(dialog: Md2Dialog, index: number) {
+        try {
+            this.pageNo = 1;
+            this.TotalPages = 0;
+            if (index === 0) {
+                this.Searchfilter();
+            }
+            this.SearchText = this.TextSearch;
+            this.show = false;
+            this.formlistrequest.PIFilterValueString = [];
+            this.PIFilterValue = [];
+            this.appc.isLoading = true;
+            this.InOutFormList = [];
+            this.PositiveCount = 0;
+            this.NeutralCount = 0;
+            this.NegativeCount = 0;
+            this.TotalCount = 0;
+            this.UnresolvedCount = 0;
+            this.formlistrequest = new FeedbackListRequest;
+            this.formlistrequest.AppUserId = this.apiservice.GetUserId();
+            this.formlistrequest.GroupId = this.apiservice.GetCurrentGroupId();
+            this.formlistrequest.ActivityId = this.actId;
+            this.formlistrequest.HasAreaManager = this.apiservice.GetUserIsAreaManager();
+            this.formlistrequest.QuestionnaireFormId = this.apiservice.GetQuestionnaireFormId();
+            this.formlistrequest.CaptureFormId = this.apiservice.GetCaptureFormId();
+            this.formlistrequest.IsTellUsSubmitted = this.apiservice.GetTellUsSubmitted();
+            this.formlistrequest.QuestionnaireType = this.apiservice.GetQuestionnaireType();
+            this.formlistrequest.Page = 1;
+            this.formlistrequest.Rows = 0;
+            this.formlistrequest.FormReadUnread = null;
+            this.formlistrequest.FormAction = null;
+            this.formlistrequest.FormActionText = null;
+            this.formlistrequest.FormActionTemplate = null;
+            this.formlistrequest.FormUnreadChat = false;
+            this.formlistrequest.FormRecursion = false;
+            this.formlistrequest.FormResponseTypeCheckbox = false;
+            this.formlistrequest.FormResend = false;
+            this.formlistrequest.FormTransfer = false;
+            this.formlistrequest.FormIsResponse = false;
+            this.formlistrequest.FormEdited = false;
+            this.formlistrequest.Search = this.TextSearch;
+            this.formlistrequest.IsFlag = false;
+            if (this.selectedIndex === 4) {
+                this.formlistrequest.SmileyTypesSortby = '';
+            } else {
+                this.formlistrequest.SmileyTypesSortby = this.FormStatusType;
+            }
+
+            this.formlistrequest.FromDate = '';
+            this.formlistrequest.ToDate = '';
+            this.formlistrequest.HasForMobile = false;
+            this.formlistrequest.HasIsOut = true;
+            this.formlistrequest.FilterOn = '1';
+            this.formlistrequest.QuestionId = 0;
+            this.formlistrequest.HasAdvanceSearch = false;
+            this.formlistrequest.QuestionSearch = '';
+            this.formlistrequest.SortBy = this.FormSortType;
+            const questiongroupcontrolvalue = <FormArray>this.searchfieldsModel.controls['questionLairs'];
+            const formGroupcontrol = <FormGroup>questiongroupcontrolvalue.controls[0];
+            if (questiongroupcontrolvalue.controls.length > 0) {
+                this.questionSearchArray = [];
+                for (const key in formGroupcontrol.controls) {
+                    if (formGroupcontrol.controls.hasOwnProperty(key)) {
+                        const element = formGroupcontrol.controls[key];
+                        
+                        if (this.QuestionTypeId == 19) {
+                            this.questionSearchArray.push(key + '$' + '1' + '$' + element.value);
+                        }
+                        else {
+                            if (element.value != null){
+                                this.eleValue = element.value.toString();
+                            }                         
+                            if (this.eleValue.search('&') == -1) {
+                                this.questionSearchArray.push(key + '$' + '1' + '$' + element.value);
+                            }
+                            else {
+                                this.questionSearchArray.push(key + '$' + '1' + '$' + element.value.replace("&", "$$$$"));
+                            }
+                        }
+                    }
+                }
+                this.formlistrequest.QuestionSearch = this.questionSearchArray.join('$');
+            }
+
+            for (let key in this.searchfieldsModel.controls) {
+                if (this.searchfieldsModel.controls.hasOwnProperty(key)) {
+                    let control = this.searchfieldsModel.controls[key];
+                    if (key === 'DDEstablishment') {
+                        let estvalues: Array<any> = control.value;
+                        if (estvalues.length !== 0) {
+                            this.formlistrequest.EstablishmentId = estvalues.join(',');
+                        }
+                        if (estvalues.length === 0) {
+                            this.formlistrequest.EstablishmentId = '0';
+                        }
+                    }
+                    if (key === 'DDApplicationUsers') {
+                        let appvalues: Array<any> = control.value;
+                        if (appvalues.length !== 0) {
+                            this.formlistrequest.UsersId = appvalues.join(',');
+                        }
+                        if (appvalues.length === 0) {
+                            this.formlistrequest.UsersId = '0';
+                        }
+                    }
+                    if (key === 'fromDate') {
+                        this.formlistrequest.FromDate = control.value != null ? this.ConvertDatetoString(control.value) : '';
+                    }
+                    if (key === 'toDate') {
+                        this.formlistrequest.ToDate = control.value != null ? this.ConvertDatetoString(control.value) : '';
+                    }
+                    if (key === 'referenceNo') {
+                        if (control.value === null) {
+                            this.formlistrequest.ReportId = 0;
+                        } else if (control.value === '') {
+                            this.formlistrequest.ReportId = 0;
+                        } else {
+                            this.formlistrequest.ReportId = parseInt(control.value, 10);
+                        }
+                    }
+                    if (key === 'PIFilter') {
+                        if (control.value === null) {
+                            this.formlistrequest.PIFilter = '';
+                        } else if (control.value === '') {
+                            this.formlistrequest.PIFilter = '';
+                        } else {
+                            this.formlistrequest.PIFilterValueString.push("Range");
+                            this.PIFilterValue.push(control.value);
+                        }
+                    }
+                    if (key === 'ComparePIFilterMin') {
+                        if (control.value === null) {
+                        } else if (control.value === '') {
+                        } else {
+                            this.PIFilterValue.push(control.value);
+                            if (this.PIFilterValue[0] == 7) {
+                            }
+                            else {
+                                this.formlistrequest.PIFilterValueString.push(this.PIFilterValue);
+                            }
+                        }
+                    }
+                    if (key === 'ComparePIFilterMax') {
+                        if (control.value === null) {
+                        } else if (control.value === '') {
+                        } else {
+                            this.PIFilterValue.push(control.value);
+                            this.formlistrequest.PIFilterValueString.push(this.PIFilterValue);
+                        }
+                    }
+
+                    if (key === 'FormType') {
+                        if (control.value === 'All') {
+                            this.formlistrequest.FormType = null;
+                        } else {
+                            this.formlistrequest.FormType = control.value;
+                        }
+                    }
+
+                    if (key === 'FormStatus') {
+                        if (control.value === 'All') {
+                            this.formlistrequest.FormStatus = '';
+                            this.UnresolvedCountLabel = 'All';
+                            this.fdlisttype = ''
+
+                        } else if (control.value === 'Resolved') {
+                            this.formlistrequest.FormStatus = control.value;
+                            this.UnresolvedCountLabel = 'Resolved';
+                            this.fdlisttype = 'Resolved'
+                        } else {
+                            this.formlistrequest.FormStatus = control.value;
+                            this.UnresolvedCountLabel = 'Unresolved';
+                            this.fdlisttype = 'unresolved'
+                        }
+                    }
+                    if (key === 'FormReadUnread') {
+                        this.formlistrequest.FormReadUnread = control.value;
+                    }
+                    if (key === 'FormAction') {
+                        this.formlistrequest.FormAction = control.value;
+                    }
+                    if (key === 'FormActionText') {
+                        this.formlistrequest.FormActionText = control.value;
+                    }
+                    if (key === 'FormActionTemplate') {
+                        this.formlistrequest.FormActionTemplate = control.value;
+                    }
+                    if (key === 'FormUnreadChat') {
+                        this.formlistrequest.FormUnreadChat = control.value;
+                    }
+                    if (key === 'FormRecursion') {
+                        this.formlistrequest.FormRecursion = control.value;
+                    }
+                    if (key === 'FormResend') {
+                        this.formlistrequest.FormResend = control.value;
+                    }
+                    if (key === 'FormTransfer') {
+                        this.formlistrequest.FormTransfer = control.value;
+                    }
+                    if (key === 'FormResponseTypeCheckbox') {
+                        if (control.value == true) {
+                            this.formlistrequest.FormResponseType = 'NotResponded';
+                            this.formlistrequest.FormIsResponse = true;
+                            this.fdlisttype = 'NotResponded'
+                        }
+                        else {
+                            this.formlistrequest.FormResponseType = 'All';
+                        }
+                    }
+                    if (key === 'IsFlag') {
+                        this.formlistrequest.IsFlag = control.value;
+                    }
+
+                    if (this.formlistrequest.QuestionSearch.length > 0) {
+                    }
+                    else {
+                       this.formlistrequest.FormType = 'All';
+                    }
+                }
+            }
+
+            this.QuestionTypeId = 0;
+        } catch (error) {
+            this.appc.isLoading = false;
+            console.warn(error);
+        }
+        if (this.formlistrequest.QuestionSearch == '' || this.formlistrequest.QuestionSearch == null || this.formlistrequest.QuestionSearch == undefined) {
+            this.formlistrequest.FormType = 'All';
+        }        
+       
+        if(this.PIFormTypeValue == true){
+            this.formlistrequest.PIFormTypeValue = 'true';
+        }
+        else{
+            this.formlistrequest.PIFormTypeValue = 'false';
+        }
+
+        let CurrentActivityType = this.apiservice.GetCurrentActivityType();
+        if (CurrentActivityType.toLowerCase() === 'customer') {
+            this.formlistrequest.PIFormTypeValue = 'true';
+        }
+      
+
+        this.GetFeedbackListRequest(this.formlistrequest, true);
+        localStorage.setItem('FitterValuesSet', JSON.stringify(this.formlistrequest));
+        if (this.formlistrequest.FormType === "Out"
+            && (this.formlistrequest.EstablishmentId === '0' || this.formlistrequest.EstablishmentId === null || this.formlistrequest.EstablishmentId === undefined)
+            && (this.formlistrequest.UsersId === '0' || this.formlistrequest.UsersId === null || this.formlistrequest.UsersId === undefined)
+            && (this.formlistrequest.FormStatus === "" || this.formlistrequest.FormStatus === null || this.formlistrequest.FormStatus === undefined)
+            && (this.formlistrequest.FormReadUnread === "All" || this.formlistrequest.FormReadUnread === null)
+            && (this.formlistrequest.FromDate === "" || this.formlistrequest.FromDate === null)
+            && (this.formlistrequest.ToDate === "" || this.formlistrequest.ToDate === null)
+            && (this.formlistrequest.ReportId === 0) && (this.formlistrequest.FormAction === "" || this.formlistrequest.FormAction === null)
+            && (this.formlistrequest.PIFilter === null || this.formlistrequest.PIFilter === null)
+            && (this.formlistrequest.FormUnreadChat === false)
+            && (this.formlistrequest.FormRecursion === false)
+            && (this.formlistrequest.FormResend === false)
+            && (this.formlistrequest.FormTransfer === false)
+            && (this.formlistrequest.FormResponseType === "" || this.formlistrequest.FormResponseType === null || this.formlistrequest.FormResponseType === undefined)
+            && (this.formlistrequest.FormTransfer === false)
+            && (this.formlistrequest.FormIsResponse === false) && (this.formlistrequest.IsFlag === false)
+        ) {
+            this.filterselected = false;
+        }
+        else {
+            this.filterselected = true;
+        }
+    }
+
+    onClearConfirmationDialog(dialog: Md2Dialog) {
+        dialog.open();
+        this.filterselected = false;
+    }
+
+    ClearallFilterConfirmation(dialog: Md2Dialog) {
+        try {
+            let to_date = new Date();
+            let from_date = to_date.setDate(to_date.getDate() + (-1000));
+            this.fromDate = new Date(from_date);
+            this.todate = new Date();
+            this.TextSearch = '';
+            this.SearchText = '';
+            this.selectedIndex = 4
+            this.FormTypeQuestionList = [];
+            this.PIFormType = 'Out';
+            this.PIFormTypeValue = false;
+            for (let key in this.searchfieldsModel.controls) {
+                if (this.searchfieldsModel.controls.hasOwnProperty(key)) {
+                    let control = this.searchfieldsModel.controls[key];
+                    if (key === 'DDEstablishment') {
+                        this.EstablishmentList = this.AllEstablishmentList;
+                        control.setValue([]);
+                        this.formlistrequest.EstablishmentId = '0';
+                    }
+                    if (key === 'DDApplicationUsers') {
+                        this.ApplicationUsersList = this.AllApplicationUsersList;
+                        control.setValue([]);
+                        this.formlistrequest.UsersId = '0';
+                    }
+                    if (key === 'fromDate') {
+                        control.setValue(this.fromDate);
+                    }
+                    if (key === 'toDate') {
+                        control.setValue(this.todate);
+                    }
+                    if (key === 'referenceNo') {
+                        control.setValue(null);
+                    }
+                    if (key === 'PIFilter') {
+                        control.setValue(null);
+                    }
+                    if (key === 'FormType') {
+                        this.FormQuestionList = [];
+                        this.FormQuestionList = this.FeedBackFormQuestionList;
+                        control.setValue('Out');
+                    }
+                    if (key === 'FormStatus') {
+                        control.setValue('All');
+                    }
+                    if (key === 'FormReadUnread') {
+                        control.setValue('All');
+                    }
+                    if (key === 'FormResponseType') {
+                        control.setValue(false);
+                    }
+                    if (key === 'FormAction') {
+                        this.IsFormAction = false;
+                        control.setValue('');
+                    }
+                    if (key === 'FormActionText') {
+                        control.setValue(null);
+                    }
+                    if (key === 'FormActionTemplate') {
+                        control.setValue(null);
+                    }
+                    if (key === 'FormUnreadChat') {
+                        control.setValue(false);
+                    }
+                    if (key === 'FormRecursion') {
+                        control.setValue(false);
+                    }
+                    if (key === 'FormResend') {
+                        control.setValue(false);
+                    }
+                    if (key === 'FormTransfer') {
+                        control.setValue(false);
+                    }
+                    if (key === 'FormIsResponse') {
+                        control.setValue(false);
+                    }
+                    if (key === 'questionLairs') {
+                        const questioncontrol = <FormArray>this.searchfieldsModel.controls['questionLairs'];
+                        questioncontrol.removeAt(0);
+                        let findindex = this.FilterQuestionList.length;
+                        this.FilterQuestionList.splice(0, findindex);
+                    }
+                    if (key === 'selectedFormQuestionValue') {
+                        control.setValue([]);
+                        this.formlistrequest.QuestionSearch = null;
+                    }
+                    if (key === 'PIFilter') {
+                        control.setValue('');
+                    }
+                    if (key === 'ComparePIFilterMax') {
+                        control.setValue('');
+                    }
+                    if (key === 'ComparePIFilterMin') {
+                        control.setValue('');
+                    }
+                    if (key === 'IsFlag') {
+                        control.setValue(false);
+                    }
+                    if (key === 'FormResponseTypeCheckbox') {
+                        control.setValue(false);
+                    }
+
+                }
+            }
+        } catch (error) {
+            console.warn(error);
+        }
+
+        dialog.close();
+    }
+
+    onClearTextSearch() {
+        this.TextSearch = '';
+        this.SearchText = '';
+        this.formlistrequest.Search = '';
+        this.GetFeedbackListRequest(this.formlistrequest, false);
+    }
+    toggle() {
+        this.show = !this.show;
+    }
+    onSmileyTypesSortbyFilter(event: any, index: number) {
+        this.selectedIndex = index;
+        if (index === 4) {
+            if (this.UnresolvedCountLabel === 'Unresolved' && index === 4) {
+                this.UnresolvedCountLabel = 'All';
+                this.FormStatusType = '';
+                this.formlistrequest.FormStatus = '';
+                this.fdlisttype = ''
+            } else {
+                this.UnresolvedCountLabel = 'Unresolved';
+                this.FormStatusType = 'Unresolved';
+                this.formlistrequest.FormStatus = 'Unresolved';
+                this.fdlisttype = 'unresolved'
+            }
+
+            let controlFormStatus = this.searchfieldsModel.controls['FormStatus'];
+            controlFormStatus.setValue(this.UnresolvedCountLabel);
+            this.formlistrequest.SmileyTypesSortby = '';
+        }
+
+        if (index !== 4) {
+            let target = event.currentTarget;
+            this.formlistrequest.SmileyTypesSortby = target.attributes[1].value;
+            this.FormStatusType = target.attributes[1].value;
+        } else {
+            this.formlistrequest.SmileyTypesSortby = '';
+        }
+        this.formlistrequest.FilterOn = '';
+    }
+
+    onSmileyTypesSortby(event: any, index: number) {
+        this.pageNo = 1;
+        this.TotalPages = 0;
+        this.formlistrequest.Page = 1;
+        this.appc.isLoading = true;
+        this.InOutFormList = [];
+        if (index === 1) {
+            this.Displaylabel = this.messageService.FeedbackListMessage(3) //'Positive forms found';
+        }
+        else if (index === 2) {
+            this.Displaylabel = this.messageService.FeedbackListMessage(4) //'Neutral forms found';
+        }
+        else if (index === 3) {
+            this.Displaylabel = this.messageService.FeedbackListMessage(5) //'Negative forms found';
+        }
+        else if (index === 4) {
+            this.Displaylabel = this.messageService.FeedbackListMessage(6) //'unresolved forms found';
+        }
+        else {
+            this.Displaylabel = this.messageService.FeedbackListMessage(7) //'Data';
+        }
+
+        if (index === 4) {
+            this.PositiveCount = 0;
+            this.NeutralCount = 0;
+            this.NegativeCount = 0;
+            this.TotalCount = 0;
+            this.UnresolvedCount = 0;
+        }
+        this.selectedIndex = index;
+
+        if (index === 4) {
+            if (this.UnresolvedCountLabel === 'Unresolved' && index === 4) {
+                this.UnresolvedCountLabel = 'All';
+                this.FormStatusType = '';
+                this.formlistrequest.FormStatus = '';
+                this.fdlisttype = ''
+            } else {
+                this.UnresolvedCountLabel = 'Unresolved';
+                this.FormStatusType = 'Unresolved';
+                this.formlistrequest.FormStatus = 'Unresolved';
+                this.fdlisttype = 'unresolved'
+            }
+
+            let controlFormStatus = this.searchfieldsModel.controls['FormStatus'];
+            controlFormStatus.setValue(this.UnresolvedCountLabel);
+            this.formlistrequest.SmileyTypesSortby = '';
+        }
+
+        if (index !== 4) {
+            let target = event.currentTarget;
+            this.formlistrequest.SmileyTypesSortby = target.attributes[1].value;
+        } else {
+            this.formlistrequest.SmileyTypesSortby = '';
+        }
+
+        this.formlistrequest.FilterOn = '';
+
+        try {
+            this.NoDataDisplay = false;
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/FeedbackList', this.formlistrequest).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        if (data.Result != null) {
+                            this.rowsNo = data.Result.PagingRowNumber;
+                         
+                            if (data.Result.TotalRecords === 0) {
+                                this.NoDataDisplay = true;
+                                this.InOutFormList = [];
+                            } else {
+                                this.InOutFormList = data.Result.WebRows;
+                                this.NoDataDisplay = false;
+                            }
+
+                            this.FormStatusType = data.Result.SearchFields.SmileyTypesSortby;
+                            if (this.selectedIndex === 4) {
+                                this.PositiveCount = data.Result.PositiveCount;
+                                this.NeutralCount = data.Result.PassiveCount;
+                                this.NegativeCount = data.Result.NegativeCount;
+                                this.TotalCount = data.Result.TotalRecords;
+                                this.UnresolvedCount = this.TotalCount;
+                            }
+                        } else {
+                            this.NoDataDisplay = true;
+                            this.InOutFormList = [];
+                            this.dialogalertmessage = data.Message;
+                            this.alertDialog.open();
+                        }
+                        this.appc.isLoading = false;
+                    } else {
+                        this.appc.isLoading = false;
+                        this.dialogalertmessage = data.Message;
+                        this.alertDialog.open();
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    this.dialogalertmessage = this.messageService.loginMessage(2) //'error connecting to server. please try again.';
+                    this.alertDialog.open();
+                });
+        } catch (error) {
+            this.appc.isLoading = false;
+            console.warn(error);
+        }
+    }
+
+    onFormSortBy(event: any, index: number) {
+        this.buttonselectedIndex = index;
+        let target = event.currentTarget;
+        this.FormSortType = target.attributes[1].value;
+        try {
+            this.appc.isLoading = true;
+            this.formlistrequest.Page = 1;
+            this.formlistrequest.Rows = 0;
+            this.formlistrequest.SortBy = this.FormSortType;
+            localStorage.setItem('FitterValuesSet', JSON.stringify(this.formlistrequest));
+            this.GetFeedbackListRequest(this.formlistrequest, true);
+        } catch (error) {
+            this.appc.isLoading = false;
+            console.warn(error);
+        }
+    }
+
+    SetRemoveFromstatisticsRequest(objectRequest: any) {
+        try {
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/FeedbackRemoveFromStatistics', objectRequest
+            ).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.RemoveFromStatisticdisabled = true;
+                        this.SelectOneForm = false;
+                        this.formlistrequest.Page = 1;
+                        this.GetFeedbackListRequest(this.formlistrequest, true);
+                    } else {
+                        this.appc.isLoading = false;
+                        console.warn(data.Message);
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+
+    onRemoveFromStatistics(event: any) {
+        this.appc.isLoading = true;
+        if (event.checked) {
+            this.RemoveFromStatisticsLabel = 'Enable';
+        } else {
+            this.RemoveFromStatisticsLabel = 'Disable';
+        }
+
+        this.SetRemoveFromstatisticsRequest(this.RemoveFromStatisticsListModel);
+    }
+
+    RemoveRecursionFormRequest(reportid: number, dialog: Md2Dialog) {
+        this.appc.isLoading = true;
+        try {
+            this.apiservice.GetAPI('api/v1/Feedbacks/RemoveRecursionForm?reportId=' + this.apiservice.EncodeHex(reportid + '')).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.appc.isLoading = false;
+                        this.dialogalertmessage = this.messageService.FeedbackDetailsMessage(3) // 'Recursion Remove Successfully.';
+                        dialog.open();
+                    } else {
+                        this.appc.isLoading = false;
+                        console.warn(data.Message);
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+
+    CopyFormRequest(encodereportId: string,
+        encodeestablishmentId: string,
+        encodecontactmasterId: string,
+        encodeiscontactgroup: string,
+        encodecontactgroupname: string) {
+        this.appc.isLoading = true;
+        let urlPath = this.router.url;
+        this.apiservice.SetPreviousUrl(urlPath);
+        this.router.navigate(['/capturecopyedit'], {
+            queryParams: {
+                rid: encodereportId,
+                eid: encodeestablishmentId,
+                cmid: encodecontactmasterId,
+                iscg: encodeiscontactgroup,
+                isfrmc: this.apiservice.EncodeHex('1'),
+                ccf: this.apiservice.EncodeHex('1')
+            }
+        });
+    }
+
+    DeleteFormRequest(reportid: number, isout: boolean, dialog: Md2Dialog) {
+        this.dialogalertdeader = this.apiservice.GetCurrentGroupName();
+        this.dialogalertmessage = this.messageService.FeedbackListMessage(8) //'Delete?';
+        dialog.open();
+        this.formdeleterequest = {
+            ReportId: reportid,
+            IsOut: isout,
+            AppUserId: this.apiservice.GetUserId()
+        };
+    }
+
+    DeleteFormConfirmation(dialog: Md2Dialog) {
+        dialog.close();
+        this.appc.isLoading = true;
+        try {
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/DeleteFeedbackForm', this.formdeleterequest).subscribe(
+                data => {
+                    this.OnRefreshList();
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+        } catch (error) {
+            this.appc.isLoading = false;
+        }
+    }
+
+    TransferFormRequest(reportid: number, isout: boolean, dialog: Md2Dialog) {
+        this.dialogalertdeader = this.apiservice.GetCurrentGroupName();
+        this.dialogalertmessage = this.messageService.FeedbackDetailsMessage(4) // 'Are you sure Transfer?';
+        dialog.open();
+        this.formtransferrequest.ReportId = reportid;
+        this.formtransferrequest.IsOut = isout;
+        this.formtransferrequest.AppUserId = this.apiservice.GetUserId();
+        this.EstablishmentList = [];
+        this.TransferApplicationUserList = [];
+        this.formtransferrequest.EstablishmentId = this.TransferEstablishment;
+        this.formtransferrequest.NewAppUserId = this.TransferApplicationUsers;
+    }
+
+    TransferFormConfirmation(alert: Md2Dialog, dialog: Md2Dialog, transferdialog: Md2Dialog) {
+        dialog.close();
+        transferdialog.close();
+        this.appc.isLoading = true;
+        try {
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/TransferForm', this.formtransferrequest).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.appc.isLoading = false;
+                        this.dialogalertmessage = this.messageService.FeedbackDetailsMessage(5) // 'Form has been transferred to user successfully.';
+                        alert.open();
+                        this.GetFeedbackListRequest(this.formlistrequest, false);
+                        console.warn(data.Message);
+                    } else {
+                        this.appc.isLoading = false;
+                        console.warn(data.Message);
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+        } catch (error) {
+
+        }
+    }
+
+    onChangeTransferEstablishmentId(event: any) {
+        this.appc.isLoading = true;
+        this.TransferApplicationUserList = [];
+        try {
+            let formData: FormData = new FormData();
+            formData.append('currentFormUserId', this.currentFormUserId);
+            formData.append('appUserId', this.apiservice.GetUserId());
+            formData.append('EstablishmentId', this.TransferEstablishment);
+            formData.append('activityId', this.apiservice.GetActivityId());
+            this.apiservice.UploadFiles('api/v1/Feedbacks/GetTransferAppUserList', formData).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        if (data.Result != null) {
+                            this.TransferApplicationUserList = data.Result;
+                        }
+                    };
+                    this.appc.isLoading = false;
+                },
+                err => {
+                    console.warn(err.Message);
+                    this.appc.isLoading = false;
+                });
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+
+    ResendFormRequest(reportid: number, dialog: Md2Dialog) {
+        this.dialogalertdeader = this.apiservice.GetCurrentGroupName();
+        this.dialogalertmessage = this.messageService.FeedbackDetailsMessage(2) // 'Are you sure you want to resend the form?';
+        dialog.open();
+        this.formdeleterequest = {
+            ReportId: reportid,
+            IsOut: 0,
+            AppUserId: this.apiservice.GetUserId()
+        };
+    }
+
+    ResendFormConfirmation(alert: Md2Dialog, dialog: Md2Dialog) {
+        dialog.close();
+        this.appc.isLoading = true;
+        try {
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/ResendForm', this.formdeleterequest).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.appc.isLoading = false;
+                        this.dialogalertmessage = this.messageService.FeedbackDetailsMessage(6) // 'Form Sent.';
+                        alert.open();
+                        console.warn(data.Message);
+                    } else {
+                        this.appc.isLoading = false;
+                        console.warn(data.Message);
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+        } catch (error) {
+
+        }
+    }
+
+    ResolveFormRequest(reportid: number, answerstatus: string, isout: boolean) {
+        try {
+            this.GetAllEstablishmentStatusIcon = this.apiservice.GetAllEstablishmentStatusIcon();
+            this.appc.isLoading = true;
+            if (!answerstatus) {
+                answerstatus = 'unresolvedall';
+            } else {
+                answerstatus = 'resolvedall';
+            }
+
+            let formresolverequest = {
+                ReportId: reportid,
+                AppUserId: this.apiservice.GetUserId(),
+                AnswerStatus: answerstatus,
+                IsOut: isout,
+                UserName: this.apiservice.GetCurrentUserName,
+                Password: '',
+                GroupId: this.apiservice.GetCurrentGroupId(),
+                latitude: this.geolocationlatitude,
+                longitude: this.geolocationlongitude,
+                CurrentActivityType : this.apiservice.GetCurrentActivityType()
+            };
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/ResolveUnresolveForm', formresolverequest).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.CurrentStatusList = data.Result;
+                        for (let index = 0; index < this.CurrentStatusList.length; index++) {
+                            for (let count = 0; count < this.InOutFormList.length; count++) {
+                                if (this.CurrentStatusList[index].ReferenceNo == this.InOutFormList[count].ReportId) {
+                                    this.InOutFormList[count].StatusName = this.CurrentStatusList[index].StatusName
+                                    this.InOutFormList[count].StatusImage = this.CurrentStatusList[index].StatusImage;
+                                    this.InOutFormList[count].StatusTime = this.CurrentStatusList[index].StatusTime;
+                                    this.InOutFormList[count].StatusCounter = this.CurrentStatusList[index].StatusCounter;
+                                    this.InOutFormList[count].StatusId = this.CurrentStatusList[index].StatusId
+                                    if (answerstatus == 'unresolvedall') {
+                                        this.InOutFormList[count].Resolved = true;
+                                        this.InOutFormList[count].FormColor = '#2cc56a'
+                                    } else {
+                                        this.InOutFormList[count].Resolved = false;
+                                        this.InOutFormList[count].FormColor = '#989ba4'
+                                    }
+                                }
+                            }
+                        }
+
+                        if (this.CurrentStatusList.length == 0 || this.CurrentStatusList==null)
+                        for (let count = 0; count < this.InOutFormList.length; count++) {
+                            if (reportid == this.InOutFormList[count].ReportId) {
+                                if (answerstatus == 'unresolvedall') {
+                                    this.InOutFormList[count].Resolved = true;
+                                    this.InOutFormList[count].FormColor = '#2cc56a'
+                                } else {
+                                    this.InOutFormList[count].Resolved = false;
+                                    this.InOutFormList[count].FormColor = '#989ba4'
+                                }
+                            }
+                        }
+                        
+                        this.appc.isLoading = false;
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+
+                });
+        } catch (error) {
+            this.appc.isLoading = false;
+            console.warn(error);
+
+        }
+    }
+
+    onSelectAllForms(check: boolean) {        
+        let model = [];
+        model = this.RemoveFromStatisticsListModel;
+        model.forEach(element => {
+            if (element.HasDisable) {
+                this.RemoveFromStatisticsListModel.filter(t => t.ReportId === element.ReportId).forEach(t => t.HasDisable = false);
+            } else {
+                this.RemoveFromStatisticsListModel.filter(t => t.ReportId === element.ReportId).forEach(t => t.HasDisable = true);
+            }
+        });
+
+        this.SelectOneForm = check;
+        this.RemoveFromStatisticdisabled = !check;
+    }
+
+    onSelectFormStatistics(checked: boolean, refid: number, isout: boolean) {
+        this.RemoveFromStatisticdisabled = false;
+        if (checked) {
+            this.RemoveFromStatisticsListModel.filter(t => t.ReportId === refid).forEach(c => c.HasDisable = false);
+        } else {
+            this.RemoveFromStatisticsListModel.filter(t => t.ReportId === refid).forEach(c => c.HasDisable = true);
+        }
+    }
+
+    openTransferDialog(currentFormReportid: number,
+        currentFormIsOut: boolean,
+        currentFormUserId: string,
+        transfer: Md2Dialog,
+        alert: Md2Dialog) {
+        this.currentFormReportid = currentFormReportid;
+        this.currentFormIsOut = currentFormIsOut;
+        this.currentFormUserId = currentFormUserId;
+        this.TransferApplicationUserList = [];
+        transfer.open();
+        return false;
+    }
+
+    allFormDisable(model: RemoveFromStatisticsList[]): boolean {
+        if (!model) {
+            return false;
+        }
+        return model.every(t => t.HasDisable) ? true
+            : model.every(t => !t.HasDisable) ? false : false;
+    }
+
+    RedirectToChat(refid: string, moduleId: string, activityid: string, CId: number) {
+        let urlPath = this.router.url;
+        this.apiservice.SetPreviousUrl(urlPath);
+        this.router.navigate(['/chat'], { queryParams: { rid: refid, mid: moduleId, aid: activityid, CId: this.apiservice.EncodeHex(CId), type: this.apiservice.EncodeHex(this.fdlisttype) } });
+    }
+
+    showDiv() {
+        this.hideToggle ? this.hideToggle = false : this.hideToggle = true;
+    }
+
+    Searchfilter() {
+        this.FilterToggle ? this.FilterToggle = false : this.FilterToggle = true;
+    }
+
+    onSearchEstablishment(value: string) {
+        if (value === '') {
+            this.EstablishmentList = this.AllEstablishmentList;
+        } else {
+            let selectedEstablishmentList: Array<any> = [];
+            selectedEstablishmentList = this.AllEstablishmentList.filter((e: any) =>
+                e.Text.toLowerCase().indexOf(value.toLowerCase()) > -1);
+            if (selectedEstablishmentList !== undefined && selectedEstablishmentList.length > 0) {
+                this.EstablishmentList = selectedEstablishmentList;
+            } else {
+                this.EstablishmentList = this.AllEstablishmentList;
+            }
+        }
+    }
+
+    onSelectAllEstablishmentFilter(event: any) {
+        try {
+            if (event.currentTarget.checked) {
+                this.selectedEstablishmentValue = this.EstablishmentList.map((c: any) => c.Value).slice();
+                this.searchfieldsModel.controls['DDEstablishment'].setValue(this.selectedEstablishmentValue);
+            } else {
+                this.selectedEstablishmentValue = [];
+                this.searchfieldsModel.controls['DDEstablishment'].setValue(this.selectedEstablishmentValue);
+            }
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+    onSelectEstablishment(event: any) {
+        this.appc.isLoading = true;
+        try {
+            let control = this.searchfieldsModel.controls['DDEstablishment'];
+            if (event.value.length === 0) {
+                let getuserRequest = {
+                    AppUserId: this.apiservice.GetUserId(),
+                    GroupId: this.apiservice.GetCurrentGroupId(),
+                    ActivityId: this.apiservice.GetActivityId(),
+                    HasAreaManager: this.apiservice.GetUserIsAreaManager(),
+                    EstablishmentId: this.EstablishmentList.map((c: any) => c.Value).join(','),
+                };
+                this.GetUsersList(getuserRequest);
+            } else {
+                let getuserRequest = {
+                    AppUserId: this.apiservice.GetUserId(),
+                    GroupId: this.apiservice.GetCurrentGroupId(),
+                    ActivityId: this.apiservice.GetActivityId(),
+                    HasAreaManager: this.apiservice.GetUserIsAreaManager(),
+                    EstablishmentId: control.value.map((c: any) => c).join(','),
+                };
+                this.GetUsersList(getuserRequest);
+            }
+        } catch (error) {
+            this.appc.isLoading = false;
+        }
+    }
+
+    GetUsersList(request: any) {
+        try {
+            this.apiservice.PostAPIWithObject('api/v1/Users/UserListByEstablishment', request).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        if (data.Result != null) {
+                            this.ApplicationUsersList = data.Result;
+                            let control = this.searchfieldsModel.controls['DDApplicationUsers'];
+                            control.setValue([]);
+                        } else {
+                            console.warn(data.Message);
+                        }
+
+                    } else {
+                        console.warn(data.Message);
+                    }
+                }, err => {
+                    console.warn(err.Message);
+                });
+
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+
+        this.appc.isLoading = false;
+    }
+
+    onSelectUserList(event: any) {
+        try {
+            let control = this.searchfieldsModel.controls['DDApplicationUsers'];
+            let appsrt: Array<any> = control.value;
+            for (let index = 0; index < appsrt.length; index++) {
+                this.appSeluser.push(appsrt[index]);
+            }
+            const newArray = this.appSeluser.filter((elem, i, arr) => {
+                if (arr.indexOf(elem) === i) {
+                    return elem
+                }
+            })
+            this.appSeluser = newArray;
+        } catch (error) {
+            this.appc.isLoading = false;
+        }
+    }
+
+    onSearchUser(value: string) {
+        this.searchvales = 1
+        if (value === '') {
+            this.searchvales = 0;
+            this.ApplicationUsersList = this.AllApplicationUsersList;
+        } else {
+            let selectedUserValueList: Array<any> = [];
+            selectedUserValueList = this.AllApplicationUsersList.filter((e: any) => e.Text.toLowerCase().indexOf(value.toLowerCase()) > -1);
+            if (selectedUserValueList !== undefined && selectedUserValueList.length > 0) {
+                this.ApplicationUsersList = selectedUserValueList;
+            } else {
+                this.ApplicationUsersList = this.AllApplicationUsersList;
+            }
+        }
+        if (this.appSeluser.length !== 0) {
+            for (let index = 0; index < this.appSeluser.length; index++) {
+                let Arraylist: Array<any> = [];
+                Arraylist = this.AllApplicationUsersList.filter(c => c.Value === this.appSeluser[index]);
+                this.selectedUserValue.push(Arraylist[0].Value);
+                this.searchfieldsModel.controls['DDApplicationUsers'].setValue(this.selectedUserValue);
+            }
+        }
+    }
+    onSelectAllUserFilter(event: any) {
+        try {
+            if (event.currentTarget.checked) {
+                this.selectedUserValue = this.ApplicationUsersList.map((c: any) => c.Value).slice();
+                this.searchfieldsModel.controls['DDApplicationUsers'].setValue(this.selectedUserValue);
+            } else {
+                this.selectedUserValue = [];
+                this.searchfieldsModel.controls['DDApplicationUsers'].setValue(this.selectedUserValue);
+            }
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+
+    onFormTypeChange(event: any) {
+        this.onClearFeedbackOrCaptureQuestion();
+        let data = event.value;
+        if (data === 'In') {
+            this.FormQuestionList = this.FeedBackFormQuestionList;
+            this.InOutFormType = true;
+        }
+        if (data === 'Out') {
+            this.FormQuestionList = this.CaptureFormQuestionList;
+            this.InOutFormType = true;
+        }
+    }
+
+    onchangemultiplecheckbox(event: any, questionId: any) {
+        try {
+            const questiongroupcontrolvalue = <FormArray>this.searchfieldsModel.controls['questionLairs'];
+            const formGroupcontrol = <FormGroup>questiongroupcontrolvalue.controls[0];
+            const thiscontrol = formGroupcontrol.controls[questionId];
+            let optvalues: any[] = [];
+            if (event.currentTarget.checked) {
+                if (thiscontrol.value !== '') {
+                    optvalues.push(thiscontrol.value);
+                }
+                optvalues.push(event.currentTarget.value);
+                thiscontrol.setValue(optvalues.map(c => c).join(','));
+            } else {
+                let checkedvalue = thiscontrol.value;
+                optvalues = checkedvalue.split(',');
+                let startn = optvalues.indexOf(event.currentTarget.value);
+                optvalues.splice(startn, 1);
+                thiscontrol.setValue(optvalues.map(c => c).join(','));
+            }
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+
+    get questionLairs(): FormArray {
+        return this.searchfieldsModel.get('questionLairs') as FormArray;
+    };
+
+    onAddFeedbackOrCaptureQuestionFilter(alertrequired: Md2Dialog) {
+        try {
+            let questionId = this.searchfieldsModel.controls['selectedFormQuestionValue'].value;
+            let questioncontrol: any = {};
+            let objectQuestion = this.FormQuestionList.filter(c => c.QuestionId === questionId)[0];
+            let findQid = this.FilterQuestionList.findIndex(c => c.QuestionId === questionId);
+            if (findQid >= 0) {
+                this.dialogalertmessage = this.messageService.FeedbackListMessage(9) // 'already added.';
+                alertrequired.open();
+                return false;
+            }
+
+            this.FilterQuestionList.push({
+                QuestionId: objectQuestion.QuestionId,
+                QuestionTypeId: objectQuestion.QuestionTypeId,
+                QuestionName: objectQuestion.QuestionName,
+                Required: objectQuestion.Required,
+                Hint: objectQuestion.Hint,
+                Answer: '',
+            });
+
+            const questiongroupcontrol = <FormArray>this.searchfieldsModel.controls['questionLairs'];
+            if (questiongroupcontrol.controls.length === 0) {
+                if (objectQuestion.QuestionTypeId === 26) {
+                    let optvalues: string[] = [];
+                    questioncontrol[objectQuestion.QuestionId] = new FormControl(optvalues);
+                } else {
+                    questioncontrol[objectQuestion.QuestionId] = new FormControl('');
+                }
+                questiongroupcontrol.push(this.fb.group(questioncontrol));
+            } else {
+                let optvalues: string[] = [];
+                const addrCtrl = <FormGroup>questiongroupcontrol.controls[0];
+                if (objectQuestion.QuestionTypeId === 26) {
+                    addrCtrl.addControl(objectQuestion.QuestionId, new FormControl(optvalues));
+                } else {
+                    addrCtrl.addControl(objectQuestion.QuestionId, new FormControl(''));
+                }
+            }
+
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+
+    removeQuestion(questionId: number) {
+        const questiongroupcontrol = <FormArray>this.searchfieldsModel.controls['questionLairs'];
+        const addrCtrl = <FormGroup>questiongroupcontrol.controls[0];
+        addrCtrl.removeControl(questionId.toString());
+        let findindex = this.FilterQuestionList.findIndex(c => c.QuestionId === questionId);
+        this.FilterQuestionList.splice(findindex, 1);
+    }
+
+    get GetFormArrayControls(): AbstractControl[] {
+        return this.questionLairs.controls;
+    }
+
+    filterOptionsOfQuestionType(questionId: number): Array<any> {
+        let InOutSwitchValue = this.searchfieldsModel.controls['FormType'].value;
+        if (InOutSwitchValue === 'In') {
+            return this.FeedBackFormOptionsList.filter(x => x.QuestionId === questionId);
+        }
+        if (InOutSwitchValue === 'Out') {
+            return this.CaptureFormOptionsList.filter(x => x.QuestionId === questionId);
+        }
+    }
+
+    onClearFeedbackOrCaptureQuestion() {
+        const questioncontrol = <FormArray>this.searchfieldsModel.controls['questionLairs'];
+        questioncontrol.removeAt(0);
+        let findindex = this.FilterQuestionList.length;
+        this.FilterQuestionList.splice(0, findindex);
+        let selectedFormQuestion = this.searchfieldsModel.controls['selectedFormQuestionValue'];
+        selectedFormQuestion.setValue([]);
+        this.formlistrequest.QuestionSearch = null;
+
+    }
+
+    onClearDateandTime() {
+        let to_date = new Date();
+        let from_date = to_date.setMonth(to_date.getMonth() - 1);
+        this.fromDate = new Date(from_date);
+        this.todate = new Date();
+        let formDateControl = this.searchfieldsModel.controls['fromDate'];
+        let toDateControl = this.searchfieldsModel.controls['toDate'];
+        formDateControl.setValue(this.fromDate);
+        toDateControl.setValue(this.todate);
+    }
+
+    onClearAction() {
+        this.IsFormAction = false;
+        let formactioncontrol = this.searchfieldsModel.controls['FormAction'];
+        let formactiontextcontrol = this.searchfieldsModel.controls['FormActionText'];
+        let formactiontemplatecontrol = this.searchfieldsModel.controls['FormActionTemplate'];
+        formactioncontrol.setValue('');
+        formactiontextcontrol.setValue('');
+        formactiontemplatecontrol.setValue('');
+    }
+
+    onchangeSelectpifilter(event: any) {
+        this.checkedPIFilterToggle = event.checked;
+    }
+    onchangePiCompareRange(event: any) {
+        if (event.triggerValue == 'Between') {
+            this.MaxValues = true
+        }
+        else {
+            this.MaxValues = false
+        }
+    }
+
+    onClearPI(event: any) {
+        event.checked = false;
+        this.checkedPIFilterToggle = event.checked;
+        let PIFilter = this.searchfieldsModel.controls['PIFilter'];
+        PIFilter.setValue('');
+        let ComparePIFilterMin = this.searchfieldsModel.controls['ComparePIFilterMin'];
+        ComparePIFilterMin.setValue('');
+        let ComparePIFilterMax = this.searchfieldsModel.controls['ComparePIFilterMax'];
+        ComparePIFilterMax.setValue('');
+    }
+
+    onClearReadUnread() {
+        let formreadunreadcontrol = this.searchfieldsModel.controls['FormReadUnread'];
+        formreadunreadcontrol.setValue('');
+    }
+
+    onFormActionChangeFilter(event: any) {
+        let formactiontemplate = this.searchfieldsModel.controls['FormActionTemplate'];
+        let formactiontext = this.searchfieldsModel.controls['FormActionText'];
+        if (event.value === 'Action') {
+            this.IsFormAction = true;
+        } else {
+            this.IsFormAction = false;
+            formactiontemplate.setValue('');
+            formactiontext.setValue('');
+        }
+    }
+
+    gotoFeedbackDetails(feedbackdetailurl: any) {
+        this.router.navigate(['/feedbackdetail'], { queryParams: { fd: feedbackdetailurl, type: this.apiservice.EncodeHex(this.fdlisttype) } });
+    }
+
+    gotodashboard() {
+        this.router.navigate(['/activities'], { queryParams: { Aid: this.apiservice.EncodeHex(true) } });
+    }
+
+    closemd2dialog(dialog: any) {
+        dialog.close();
+    }
+
+    ConvertDatetoString(thisdate: string) {
+        let currentdate: Date = new Date(Date.parse(thisdate));
+        let customFormat = '';
+        try {
+            let hr = ('0' + currentdate.getHours()).slice(-2);
+            let min = ('0' + currentdate.getMinutes()).slice(-2);
+            let sec = ('0' + currentdate.getSeconds()).slice(-2);
+            let month = ('0' + (currentdate.getMonth() + 1)).slice(-2) + '-';
+            let date = ('0' + currentdate.getDate()).slice(-2) + ' ';
+            customFormat = currentdate.getFullYear() + '-' + month + date + hr + ':' + min + ':' + sec;
+
+        } catch (error) {
+            this.appc.isLoading = false;
+            console.warn(error);
+        }
+
+        return customFormat;
+    }
+
+    INOutFormFlagUpdate(ReportId: any, type: any, IsFlag: any) {
+        let appUserId = this.apiservice.GetUserId();
+        let CurrentActivityType = this.apiservice.GetCurrentActivityType();
+        let activitytype: number = 0;
+        if (CurrentActivityType === 'Sales'.toLowerCase()) {
+            activitytype = 0
+        }
+        else {
+            activitytype = 1
+        }
+        if (IsFlag == true) {
+            this.flag = 'false';
+        }
+        else {
+            this.flag = 'true';
+        }
+        this.appc.isLoading = true;
+        try {
+            let flagstring = ReportId + '|' + 0 + '|' + type + '|' + activitytype;
+            this.selectedNotificationFlagId.push(flagstring);
+            this.SelectCheckboxFlag = this.selectedNotificationFlagId.map(c => c).join(',');
+            this.url = 'api/v1/Notifications/UpdateNotificationFlag?notificationId='
+                + this.apiservice.EncodeHex(this.SelectCheckboxFlag) + '&flag=' + this.apiservice.EncodeHex(this.flag) + '&Appuserid=' + this.apiservice.EncodeHex(appUserId);
+            this.apiservice.GetAPI(this.url).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        if (data.Result != null) {
+                            this.GetFeedbackListRequest(this.formlistrequest, true);
+                            this.SelectCheckboxFlag = [];
+                            this.selectedNotificationFlagId = [];
+                        }
+                    }
+                },
+                err => {
+                    console.warn(err.Message);
+                    this.appc.isLoading = false;
+                }
+            );
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+
+    GetAllStatusIconEstablishmentId(EstablishmentId: any, CurrenttatusId: any) {
+        this.GetAllEstablishmentStatus = this.apiservice.GetAllEstablishmentStatusIcon();
+        this.GetAllEstablishmentStatusIcon = this.GetAllEstablishmentStatus.filter(c => c.EstablishmentId == EstablishmentId)
+        for (let index = 0; index < this.GetAllEstablishmentStatusIcon.length; index++) {
+            if (this.GetAllEstablishmentStatusIcon[index].StatusId == CurrenttatusId) {
+                this.GetAllEstablishmentStatusIcon[index].CurrentStatusId = true;
+            }
+            else {
+                this.GetAllEstablishmentStatusIcon[index].CurrentStatusId = false;
+            }
+        }
+    }
+
+    OnchangeStatusIcon(event: any, dialog: Md2Dialog) {
+        this.dialogalertdeader = this.apiservice.GetCurrentGroupName();
+        this.Message = this.messageService.StatusIconMessage(1) + ' ' + event.currentTarget.id + '?';
+        dialog.open();
+        this.statusIconreq.lgStatusId = event.currentTarget.value;
+        this.statusIconreq.Latitude = this.geolocationlatitude;
+        this.statusIconreq.Longitude = this.geolocationlongitude;
+        this.statusIconreq.lgAppUserId = this.apiservice.GetUserId();
+        this.apiservice.SetIdforSatusIcon(this.statusIconreq);
+    }
+
+    ConfiormChangeStatusIconyes(alertsave: any, alertStatusIcon: any) {
+        this.statusIconreq = this.apiservice.GetIdforSatusIcon();
+        try {
+            this.url = 'api/v1/Feedbacks/SaveStatusHistory';
+            this.apiservice.PostAPIWithObject(this.url, this.statusIconreq
+            ).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.CurrentStatusList = data.Result;
+                        var getPerviousStatus = this.InOutFormList.filter(c => c.ReportId == this.CurrentStatusList[0].ReferenceNo);
+                        let Previous = getPerviousStatus[0].StatusName;
+                        for (let index = 0; index < this.CurrentStatusList.length; index++) {
+                            for (let count = 0; count < this.InOutFormList.length; count++) {
+                                if (this.CurrentStatusList[index].ReferenceNo == this.InOutFormList[count].ReportId) {
+                                    this.InOutFormList[count].StatusId = this.CurrentStatusList[index].StatusId
+                                    this.InOutFormList[count].StatusName = this.CurrentStatusList[index].StatusName
+                                    this.InOutFormList[count].StatusImage = this.CurrentStatusList[index].StatusImage;
+                                    this.InOutFormList[count].StatusTime = this.CurrentStatusList[index].StatusTime;
+                                    this.InOutFormList[count].StatusCounter = this.CurrentStatusList[index].StatusCounter;
+                                }
+                            }
+                        }
+                        this.appc.isLoading = false;
+                        alertsave.close();
+                        alertStatusIcon.close();
+                    } else {
+                        this.appc.isLoading = false;
+                        console.warn(data.Message);
+                        alertsave.close();
+                        alertStatusIcon.close();
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                    alertsave.close();
+                    alertStatusIcon.close();
+                });
+        } catch (error) {
+            this.appc.isLoading = false;
+            console.warn(error);
+        }
+    }
+
+    closemd2dialogStatus(dialog: any) {
+        this.GetAllEstablishmentStatus = this.apiservice.GetAllEstablishmentStatusIcon();
+        this.GetAllEstablishmentStatusIcon = this.GetAllEstablishmentStatus.filter(c => c.EstablishmentId == this.esId)
+        for (let index = 0; index < this.GetAllEstablishmentStatusIcon.length; index++) {
+            if (this.GetAllEstablishmentStatusIcon[index].StatusId == this.CurrenttatusId) {
+                this.GetAllEstablishmentStatusIcon[index].CurrentStatusId = true;
+            }
+            else {
+                this.GetAllEstablishmentStatusIcon[index].CurrentStatusId = false;
+            }
+        }
+        dialog.close();
+    }
+    inOutPiFilter(event: any) {       
+        if (event.checked) {
+            this.PIFormTypeValue=true;
+            this.PIFormType = 'In';
+        } else {
+            this.PIFormTypeValue=false;
+            this.PIFormType = 'Out';
+        }        
+    }
+
+    DateValidation(alertmd2dialog:any) {
+        let FromDate: string;
+        let ToDate: string;
+        for (let key in this.searchfieldsModel.controls) {
+            if (this.searchfieldsModel.controls.hasOwnProperty(key)) {
+                let control = this.searchfieldsModel.controls[key];
+                if (key === 'fromDate' || key === 'toDate')
+                {
+                    if (key === 'fromDate') {
+                        FromDate = control.value ;
+                    }
+                    if (key === 'toDate') {
+                        ToDate = control.value;
+                    }
+                    if ((Date.parse(ToDate) <= Date.parse(FromDate))) {
+                        this.dialogalertmessage = this.messageService.DateValidationMessage(1); // 'End Date time must be greater than start date-time'
+                        alertmd2dialog.open();
+                        return false;
+                    }
+                }
+               }
+        }
+    }
+}
