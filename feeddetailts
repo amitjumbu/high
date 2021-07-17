@@ -1,0 +1,1300 @@
+import { Component, OnInit, ElementRef, Renderer2 } from '@angular/core';
+import { Http } from '@angular/http';
+import { FormBuilder } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { APIService } from '../services/APIService';
+import { AppComponent } from '../app.component';
+import { MdDialog, MdSnackBar } from '@angular/material';
+import { Md2Dialog } from 'md2';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/filter';
+import { TranslateService } from 'ng2-translate/ng2-translate';
+import { MessageService } from '../services/MessageService';
+export interface RemoveFromStatisticsList {
+    FormType: string;
+    ReportId: number;
+    HasDisable: boolean;
+    AppUserId: number;
+}
+class SatusiconNotificationRequest {
+    public EncodeReportId: string;
+    public EncodeModuleId: string;
+    public lgAppUserId: number;
+    public strConversation: string;
+    public blIsOut: boolean;
+    public strReminderDate: string;
+    public IsCloseLoopAction: boolean;
+    public fileName: string;
+    public strAlertAppUser: string;
+    public StrTypeEmailSMS: number;
+    public StrMobileNumber: string;
+    public strAlertAppCustomer: string;
+    public strEmail: string;
+}
+
+class AttachmentList {
+    public FileExtantion: string;
+    public FileName: string;
+    public Fileclass: string;
+    public FileNamePath: string;
+}
+class FeedbackMapDataList {
+    TotalPages: string;
+    MapMarkerRows: Array<MapMarkers>;
+    TotalRecord: number;
+    Start: number;
+    End: number;
+}
+
+class FeedbackFormReadDataList {
+    TotalPages: string;
+    MapMarkerRows: Array<UsersReadData>;
+    TotalRecord: number;
+    Start: number;
+    End: number;
+}
+
+class UsersReadData {
+    User: string;
+    ReadDate: string;
+}
+
+class MapMarkers {
+    MakerTitle: string;
+    data: string;
+    lat: number;
+    lng: number;
+}
+class SatusiconRequest {
+    lgReportId: number;
+    lgAppUserId: number;
+    strUserName: string = '';
+    strPassword: string = '';
+    lgStatusId: number;
+    statusDateTime: Date
+    Latitude: string = '';
+    Longitude: string = '';
+    lgEstablishmentId: number = 0;
+}
+
+@Component({
+    selector: 'feedbackdetail',
+    templateUrl: '../template/feedbackdetail.html',
+    providers: [APIService, Md2Dialog, MessageService]
+})
+
+export class FeedbackDetail implements OnInit {
+    DefaultLat: number = 0;
+    DefaultLng: number = 0;
+    FeedbackMapDataListResponse: FeedbackMapDataList = new FeedbackMapDataList();
+    FeedbackFormReadDataListResponse: FeedbackFormReadDataList = new FeedbackFormReadDataList();
+    CurrentStatusList: any[];
+    ResolveAllRights: boolean = false;
+    InFormAvailable: boolean = false;
+    dialogalertdeader: string = '';
+    dialogalertmessage: string = '';
+    displayMode: string = 'default';
+    multi: boolean = false;
+    hideToggle: boolean = true;
+    EncodeRefId: string = '';
+    EncodeModuleId: string = '';
+    EncodeActivityId: string = '';
+    NotifyActivityId: number = 0;
+    NotifyQuestionnaireId: number = 0;
+    NotifySeenClientId: number = 0;
+    NotifyIsTellUsSubmitted: boolean = true;
+    BackButtonType: string = '';
+    acessremovefromstatistic: boolean = false;
+    allowdeleteform: boolean = false;
+    formdetailUrl: string = '';
+    ActivityType: string = '';
+    IsCustomerActivityType: boolean = false;
+    ContactInfo: any[];
+    OutFormDetails: any[];
+    InFormDetails: any[];
+    formdeleterequest: any;
+    geturequest: any;
+    RemoveFromStatisticsLabel: string = 'Disable';
+    RemoveFromstatisticslistModel: RemoveFromStatisticsList[];
+    CaptureButtonDisplay: boolean = false;
+    AppUserId = 0;
+    AppUserName = '';
+    AppUserEmail = '';
+    AppUserMobile = '';
+    AppUserIsAreaManager = false;
+    AppUserImageUrl = '';
+    ReportId = 0;
+    HasFormOut = false;
+    UnreadActionCount = 0;
+    PreviousFormLastChat = '';
+    ContactGroupName = '';
+    EstablishmentName = '';
+    SelectOneForm: boolean = false;
+    FeedbackDetailDisplayName: string = '';
+    establishmentName: string = '';
+    establishmentListDisplayName: string = '';
+    UserListDisplayName: string = '';
+    jqGridContactName: string = '';
+    contactInfoName: string = '';
+    previousFormsName: string = '';
+    captureNewName: string = '';
+    OutName: string = '';
+    InName: string = '';
+    OutSectionName: string = '';
+    InSectionName: string = '';
+    currentActivityName: string = '';
+    TransferEstablishment: string = '';
+    TransferApplicationUsers: string = '';
+    TransferEstablishmentList: any[];
+    TransferApplicationUserList: any[];
+    currentFormReportid: number = 0;
+    currentFormIsOut: boolean = false;
+    currentFormUserId: string = '';
+    formtransferrequest: any;
+    EstablishmentList: Array<any> = [];
+    ApplicationUsersList: Array<any> = [];
+    selectedNotificationFlagId: any[] = [];
+    SelectCheckboxFlag: any = null;
+    listoffalg: any
+    selectedNotificationFlagUnfalgId: any[] = [];
+    flag: any;
+    url: string;
+    CurrentActivityTypeIN: number;
+    CurrentActivityTypeout: number;
+    InFormRefNumber: boolean = false;
+    statusIconreq: SatusiconRequest;
+    StatusTimeSetting: number;
+    geolocationlatitude: any;
+    geolocationlongitude: any;
+    GetAllEstablishmentStatusIcon: any[]
+    GetAllEstablishmentStatus: any[];
+    Message: string;
+    esId: number;
+    CurrenttatusId: number;
+    AllowExportData: boolean = false;
+    IsGrayOut: boolean = false;
+    constructor(
+        private http: Http,
+        private elementRef: ElementRef,
+        private renderer: Renderer2,
+        private appc: AppComponent,
+        private fb: FormBuilder,
+        private activatedRoute: ActivatedRoute,
+        private router: Router,
+        private route: ActivatedRoute,
+        private apiservice: APIService,
+        private dialog: MdDialog,
+        private translate: TranslateService,
+        private messageService: MessageService) {
+
+        this.appc.isLogin = true;
+        this.acessremovefromstatistic = this.apiservice.AcessRemoveFromStatistics();
+        this.ResolveAllRights = this.apiservice.AllowResolveAllRights();
+        this.allowdeleteform = this.apiservice.AllowDeleteFeedback();
+        this.dialogalertdeader = this.apiservice.GetCurrentGroupName();
+        this.appc.currentUser = this.apiservice.GetCurrentUser();
+        this.appc.WebAppBackGround = 'url(' + this.apiservice.GetWebBackground() + ') no-repeat center top';
+        this.FeedbackDetailDisplayName = this.apiservice.GetFeedbackDisplayName();
+        this.establishmentName = this.apiservice.GetEstablishmentDisplayName();
+        this.establishmentListDisplayName = 'Select ' + this.apiservice.GetEstablishmentDisplayName();
+        this.UserListDisplayName = 'Select ' + this.apiservice.GetSelectUserDisplayName();
+        this.jqGridContactName = this.apiservice.GetSelectContactDisplayName();
+        this.contactInfoName = this.apiservice.GetContactInfoDisplayName();
+        this.previousFormsName = this.apiservice.GetPreviousFormsDisplayName();
+        this.captureNewName = this.apiservice.GetCaptureNewDisplayName();
+        this.OutName = this.apiservice.GetOUTDisplayName();
+        this.InName = this.apiservice.GetINDisplayName();
+        this.OutSectionName = this.apiservice.GetOUTFormSectionDisplayName();
+        this.InSectionName = this.apiservice.GetINFormSectionDisplayName();
+        this.currentActivityName = this.apiservice.GetActivityName();
+        this.InFormRefNumber = this.apiservice.GetInFormRefNumberStatus();
+        let CaptureButtonDisplay = this.apiservice.GetCaptureButtonDisplay();
+        this.StatusTimeSetting = this.apiservice.GetstatusDisplayTime();
+        if(this.StatusTimeSetting == undefined || this.StatusTimeSetting ==null)
+        {
+            this.StatusTimeSetting = this.apiservice.GetstatusDisplayfeedbackTime();
+        }
+
+        if (CaptureButtonDisplay !== '') {
+            this.CaptureButtonDisplay = true;
+        }
+        this.AllowExportData = this.apiservice.AllowExportData();
+
+        this.formdeleterequest = {
+            ReportId: 0,
+            IsOut: 0,
+            AppUserId: this.apiservice.GetUserId()
+        };
+
+        this.formtransferrequest = {
+            ReportId: 0,
+            NewAppUserId: 0,
+            EstablishmentId: 0,
+            IsOut: 0,
+            AppUserId: this.apiservice.GetUserId(),
+        };
+
+        this.route
+            .queryParams
+            .subscribe(params => {
+                this.EncodeRefId = params['rid'] || '';
+                this.EncodeModuleId = params['mid'] || '';
+                this.EncodeActivityId = params['enaid'] || '';
+                this.NotifyActivityId = (params['aid'] != undefined) ? this.apiservice.DecodeHex(params['aid']) : params['aid'] || 0;
+                this.NotifyQuestionnaireId = (params['qfid'] != undefined) ? this.apiservice.DecodeHex(params['qfid']) : params['qfid'] || 0;
+                this.NotifySeenClientId = (params['cfid'] != undefined) ? this.apiservice.DecodeHex(params['cfid']) : params['cfid'] || 0;
+                this.NotifyIsTellUsSubmitted = (params['istu'] != undefined) ? this.apiservice.DecodeHex(params['istu']) : params['istu'] || true;
+                this.BackButtonType = (params['type'] != undefined) ? this.apiservice.DecodeHex(params['type']) : params['type'] || '';
+            });
+        this.route.queryParams.subscribe(params => { this.formdetailUrl = params['fd'] || ''; });
+        if (this.formdetailUrl === '') {
+            this.formdetailUrl = this.EncodeRefId + '_' + this.EncodeModuleId + '_' + this.EncodeActivityId;
+        }
+        if (this.NotifyActivityId > 1) {
+            this.geturequest = {
+                AppUserId: this.apiservice.GetUserId(),
+                GroupId: this.apiservice.GetCurrentGroupId(),
+                ActivityId: this.NotifyActivityId,
+                HasAreaManager: this.apiservice.GetUserIsAreaManager(),
+                QuestionnaireFormId: this.NotifyQuestionnaireId,
+                CaptureFormId: this.NotifySeenClientId,
+                IsTellUsSubmitted: this.NotifyIsTellUsSubmitted,
+                FeedbackDetailUrl: this.formdetailUrl,
+            };
+        } else {
+            this.geturequest = {
+                AppUserId: this.apiservice.GetUserId(),
+                GroupId: this.apiservice.GetCurrentGroupId(),
+                ActivityId: this.apiservice.GetActivityId(),
+                HasAreaManager: this.apiservice.GetUserIsAreaManager(),
+                QuestionnaireFormId: this.apiservice.GetQuestionnaireFormId(),
+                CaptureFormId: this.apiservice.GetCaptureFormId(),
+                IsTellUsSubmitted: this.apiservice.GetTellUsSubmitted(),
+                FeedbackDetailUrl: this.formdetailUrl,
+            };
+        }
+        this.GetFormDetails(this.geturequest);
+    }
+
+    ngOnInit() {
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                this.geolocationlatitude = position.coords.latitude;
+                this.geolocationlongitude = position.coords.longitude;
+            });
+        } else {
+            this.geolocationlatitude = '0.00';
+            this.geolocationlongitude = '0.00';
+        }
+    }
+
+    ngOnDestroy() {
+    }
+
+    ngAfterViewInit() {
+    }
+
+    closemd2dialog(dialog: any) {
+        dialog.close();
+    }
+
+     RedirectToMobi(MobiFormLink: any, IsReleased: any, IsMobiExpired: any, dialog: any, ReleaseMsg: any, MobiMsg: any) {
+        if (IsReleased == true) {
+            if (IsMobiExpired == true) {
+                if(MobiMsg !== undefined && MobiMsg !== "")
+                {
+                    this.dialogalertmessage = MobiMsg;
+                }
+                else{
+                    this.dialogalertmessage = this.messageService.FeedbackListMessage(12); 
+                }
+                dialog.open();
+            }
+            else {
+                window.open(MobiFormLink, '_blank');
+            }
+        }
+        else {
+            if(ReleaseMsg !== undefined && ReleaseMsg !== "")
+                {
+                    this.dialogalertmessage = ReleaseMsg;
+                }
+                else{
+                    this.dialogalertmessage = this.messageService.FeedbackListMessage(11); 
+                }
+            dialog.open();
+        }
+    }
+
+    GetFormDetails(request: any) {
+        try {
+            if(!this.appc.isLoading )
+            {
+                this.appc.isLoading =true;
+            }
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/FeedbackDetail', request
+            ).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.EncodeRefId = data.Result.EncodeReportId;
+                        this.EncodeModuleId = data.Result.EncodeModuleId;
+                        this.EncodeActivityId = data.Result.EncodeActivityId;
+                        this.ActivityType = data.Result.ActivityType;
+                        this.ContactInfo = data.Result.ContactInfo;
+                        this.EstablishmentList = data.Result.EstablishmentList;
+                        this.ApplicationUsersList = data.Result.ApplicationUsersList;
+                        this.InFormRefNumber = data.Result.InFormhide;
+                        if (data.Result.ActivityType === 'sales') {
+                            this.CurrentActivityTypeout = 2
+                            this.CurrentActivityTypeIN = 1;
+                            this.OutFormDetails = data.Result.OutFormDetails;
+                            this.IsGrayOut = data.Result.OutFormDetails[0].IsGrayOut;
+                            this.InFormDetails = data.Result.InFormDetails;
+                            if (this.InFormDetails.length > 0) {
+                                this.InFormAvailable = true;
+                            };
+
+                            this.IsCustomerActivityType = false;
+                        } else {
+                            this.CurrentActivityTypeIN = 1;
+                            this.CurrentActivityTypeout = 1
+                            this.OutFormDetails = data.Result.InFormDetails;
+                            this.InFormAvailable = false;
+                            this.IsCustomerActivityType = true;
+                        }
+
+                        this.RemoveFromstatisticslistModel = [];
+                        this.RemoveFromstatisticslistModel.push({
+                            FormType: data.Result.HasFormOut ? 'OUT' : 'IN',
+                            ReportId: data.Result.ReportId,
+                            HasDisable: data.Result.IsDisable,
+                            AppUserId: this.apiservice.GetUserId()
+                        });
+                        this.AppUserId = data.Result.CreatedUserId;
+                        this.AppUserName = data.Result.CreatedUserName;
+                        this.AppUserEmail = data.Result.CreatedUserEmail;
+                        this.AppUserMobile = data.Result.CreatedUserMobile;
+                        this.AppUserIsAreaManager = data.Result.CreatedUserIsAreaManager;
+                        this.AppUserImageUrl = data.Result.CreatedUserImageUrl;
+                        this.ReportId = data.Result.ReportId;
+                        this.HasFormOut = data.Result.HasFormOut;
+                        this.UnreadActionCount = data.Result.UnreadChatCount;
+                        this.PreviousFormLastChat = data.Result.LastChat;
+                        this.ContactGroupName = data.Result.ContactGroupName;
+                        this.EstablishmentName = data.Result.EstablishmentName;
+                        this.appc.isLoading = false;
+                    } else {
+                        console.warn(data.Message);
+                        this.appc.isLoading = false;
+                    }
+                },
+                err => {
+                    console.warn(this.messageService.loginMessage(2));//'error connecting to server. please try again.');
+                    console.warn(err.Message);
+                    this.appc.isLoading = false;
+                });
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+
+    OnClickStatusIcon(EncodeEstablishmentId: string, EncodeReportId: string, alertStatusIcon: Md2Dialog, StatusId: string) {
+        
+        this.dialogalertmessage = '';
+        this.statusIconreq = new SatusiconRequest();
+        this.statusIconreq.lgEstablishmentId = 0
+        this.statusIconreq.lgReportId = 0
+        var establismentIds = this.apiservice.DecodeHex(EncodeEstablishmentId);
+        var report = this.apiservice.DecodeHex(EncodeReportId);
+        this.statusIconreq.lgEstablishmentId = Number(establismentIds);
+        this.statusIconreq.lgReportId = Number(report);
+        this.apiservice.SetIdforSatusIcon(this.statusIconreq);
+        this.esId = Number(establismentIds);
+        this.CurrenttatusId = Number(StatusId);
+        this.GetAllStatusIconEstablishmentId(this.esId, this.CurrenttatusId);
+        alertStatusIcon.open();
+    }
+
+    SnapshotDisplaySingleForm(EncodeReportId: string,
+        EncodeActivityId: string,
+        EstablishmentId: string,
+        UserId: number,
+        IsOut: boolean) {
+        try {            
+            if(UserId == 0 || UserId == undefined){
+                UserId = this.apiservice.GetUserId();
+            }
+            if(this.IsCustomerActivityType){
+                IsOut = false;
+            }
+            let urlorigin = window.location.origin;
+            window.open(urlorigin
+                + '/snapshotgraphform?erid=' + EncodeReportId
+                + '&eaid=' + EncodeActivityId
+                + '&eeid=' + this.apiservice.EncodeHex(EstablishmentId)
+                + '&uid=' + this.apiservice.EncodeHex(UserId)
+                + '&isou=' + this.apiservice.EncodeHex(IsOut)
+                + '', '_blank');
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+
+
+    MapDisplaySingleForm(reportId: number, isoutform: boolean) {
+        let urlPath = this.router.url;
+        this.apiservice.SetPreviousUrl(urlPath);
+        this.router.navigate(['/formmapdisplay'], {
+            queryParams: {
+                rid: this.apiservice.EncodeHex(reportId),
+                isout: this.apiservice.EncodeHex(isoutform),
+                aid: this.EncodeActivityId,
+                cfid: this.apiservice.EncodeHex(this.NotifySeenClientId)
+            }
+        });
+    }
+
+    IconMapDisplaySingleForm(reportId: number, isoutform: boolean) {
+        let urlPath = this.router.url;
+        this.apiservice.SetPreviousUrl(urlPath);
+        this.router.navigate(['/statusiconhistorymap'], {
+            queryParams: {
+                rid: this.apiservice.EncodeHex(reportId),
+                isout: this.apiservice.EncodeHex(isoutform)
+            }
+        });
+    }
+
+    FormReadAuditlog(reportId: number, isoutform: boolean) {
+        
+        if(isoutform === undefined)
+        {
+            if (this.ActivityType ==='customer')
+            {
+                isoutform = false;
+            }
+        }
+        let urlPath = this.router.url;
+        this.apiservice.SetPreviousUrl(urlPath);
+        this.router.navigate(['/FromReadLogHistory'], {
+            queryParams: {
+                rid: this.apiservice.EncodeHex(reportId),
+                isout: this.apiservice.EncodeHex(isoutform),
+            }
+        });
+    }
+
+
+    onExportPdfForm(reportId: number, isoutform: boolean, dialog: Md2Dialog) {
+        try {
+            this.appc.isLoading = true;
+            let url = 'api/v1/Feedbacks/FormExportToPdf?auid='
+                + this.apiservice.EncodeHex(reportId.toString()) + '&fdurl=' + this.formdetailUrl + '&Informhide=' + this.InFormRefNumber;
+            this.apiservice.GetAPI(url).subscribe(
+                data => {
+                    if (data.Result !== '') {
+                        window.open(data.Result, '_blank');
+                    }
+                    this.appc.isLoading = false;
+                },
+                err => {
+                    console.warn(err);
+                    this.dialogalertmessage = this.messageService.PDFRegardingMessage(1) // 'Problem in exporting PDF!';
+                    dialog.open();
+                    this.appc.isLoading = false;
+                }
+            );
+
+        } catch (error) {
+            this.dialogalertmessage = error;
+            dialog.open();
+            this.appc.isLoading = false;
+        }
+    }
+
+    // GetAttachmentList(files: string, ServerPathUrl: string): Array<AttachmentList> {
+    //     let uploadedFiles: AttachmentList[] = [];
+    //     try {
+    //         let filesarray: any[] = [];
+    //         if (files === '') {
+    //             filesarray = [];
+    //         } else {
+    //             filesarray = files.split(',');
+    //         }
+    //         if (filesarray.length > 0) {
+    //             filesarray.forEach((element: string) => {
+    //                 let filelength: number = element.split('.').length;
+    //                 let _fileextension = element.split('.')[filelength - 1].toLowerCase();
+    //                 let _filenameArray = [];
+    //                 let _filename = '';
+    //                 _filenameArray = element.split('_');
+    //                 _filenameArray.shift();
+    //                 _filename = _filenameArray.join('_');
+    //                 if (_fileextension === 'xls' || _fileextension === 'xlsx') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         Fileclass: 'icon-xls-file-format-symbol fontsize30',
+    //                         FileNamePath: ServerPathUrl + element
+    //                     });
+    //                 } else if (_fileextension === 'zip') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-zip-file-format fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'pdf') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-pdf-file-format-symbol fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'doc') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-doc-file-format fontsize30'
+    //                     });
+
+    //                 } else if (_fileextension === 'docx') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-docx-file-format-symbol fontsize30'
+    //                     });
+
+    //                 } else if (_fileextension === 'gif') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'imagefile fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'jpg' || _fileextension === 'jpeg') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'imagefile fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'png') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'imagefile fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'mov') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'videofile fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'mp4') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'videofile fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'mpg') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'videofile fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'ppt') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-ppt-business-presentation-file-format-symbol fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'sql') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-sql-file-format fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'wmv') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-wmv-file-format-symbol fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'xml') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-xml-file-format-symbol fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'txt') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-txt-file-symbol fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'avi') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-avi-video-file-format-symbol fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'dll') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-dll-file-format-symbol fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'css') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-css-file-format-symbol fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'flv') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-flv-file-format-symbol fontsize30'
+    //                     });
+    //                 } else if (_fileextension === 'iso') {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-iso-file-format-variant fontsize30'
+    //                     });
+    //                 } else {
+    //                     uploadedFiles.push({
+    //                         FileExtantion: _fileextension,
+    //                         FileName: _filename,
+    //                         FileNamePath: ServerPathUrl + element,
+    //                         Fileclass: 'icon-raw-file-format-symbol fontsize30'
+    //                     });
+    //                 }
+    //             });
+    //         }
+    //     } catch (error) {
+    //         console.warn(error);
+    //     }
+    //     return uploadedFiles;
+    // }
+
+    GetAttachmentList(files: string): Array<AttachmentList> {
+        let uploadedFiles: AttachmentList[] = [];
+        try {
+            let filesarray: any[] = [];
+            if (files === '') {
+                filesarray = [];
+            } else {
+                filesarray = files.split(',');
+            }
+            if (filesarray.length > 0) {
+                filesarray.forEach((element: string) => {
+                    let filelength: number = element.split('.').length;
+                    let _fileextension = element.split('.')[filelength - 1].toLowerCase();
+                    let _filenameArray = [];
+                    let _filename = '';
+                    _filenameArray = element.split('_');
+                    _filenameArray.shift();
+                    _filename = _filenameArray.join('_');
+                    if (_fileextension === 'xls' || _fileextension === 'xlsx') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            Fileclass: 'icon-xls-file-format-symbol fontsize30',
+                            FileNamePath:  element
+                        });
+                    } else if (_fileextension === 'zip') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'icon-zip-file-format fontsize30'
+                        });
+                    } else if (_fileextension === 'pdf') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath:  element,
+                            Fileclass: 'icon-pdf-file-format-symbol fontsize30'
+                        });
+                    } else if (_fileextension === 'doc') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath:  element,
+                            Fileclass: 'icon-doc-file-format fontsize30'
+                        });
+
+                    } else if (_fileextension === 'docx') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'icon-docx-file-format-symbol fontsize30'
+                        });
+
+                    } else if (_fileextension === 'gif') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'imagefile fontsize30'
+                        });
+                    } else if (_fileextension === 'jpg' || _fileextension === 'jpeg') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'imagefile fontsize30'
+                        });
+                    } else if (_fileextension === 'png') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'imagefile fontsize30'
+                        });
+                    } else if (_fileextension === 'mov') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'videofile fontsize30'
+                        });
+                    } else if (_fileextension === 'mp4') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'videofile fontsize30'
+                        });
+                    } else if (_fileextension === 'mpg') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'videofile fontsize30'
+                        });
+                    } else if (_fileextension === 'ppt') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'icon-ppt-business-presentation-file-format-symbol fontsize30'
+                        });
+                    } else if (_fileextension === 'sql') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'icon-sql-file-format fontsize30'
+                        });
+                    } else if (_fileextension === 'wmv') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'icon-wmv-file-format-symbol fontsize30'
+                        });
+                    } else if (_fileextension === 'xml') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'icon-xml-file-format-symbol fontsize30'
+                        });
+                    } else if (_fileextension === 'txt') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'icon-txt-file-symbol fontsize30'
+                        });
+                    } else if (_fileextension === 'avi') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'icon-avi-video-file-format-symbol fontsize30'
+                        });
+                    } else if (_fileextension === 'dll') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'icon-dll-file-format-symbol fontsize30'
+                        });
+                    } else if (_fileextension === 'css') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath:  element,
+                            Fileclass: 'icon-css-file-format-symbol fontsize30'
+                        });
+                    } else if (_fileextension === 'flv') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'icon-flv-file-format-symbol fontsize30'
+                        });
+                    } else if (_fileextension === 'iso') {
+                        uploadedFiles.push({
+                            FileExtantion: _fileextension,
+                            FileName: _filename,
+                            FileNamePath: element,
+                            Fileclass: 'icon-iso-file-format-variant fontsize30'
+                        });
+                    }
+                });
+            }
+        } catch (error) {
+            console.warn(error);
+        }
+        return uploadedFiles;
+    }
+
+    DeleteFormRequest(reportid: number, isout: boolean, dialog: Md2Dialog) {
+        this.dialogalertmessage = this.messageService.FeedbackDetailsMessage(1) // 'Send to Trash.';
+        dialog.open();
+        this.formdeleterequest = {
+            ReportId: reportid,
+            IsOut: isout,
+            AppUserId: this.apiservice.GetUserId()
+        };
+    }
+
+    DeleteFormConfirmation(dialog: Md2Dialog) {
+        dialog.close();
+        try {
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/DeleteFeedbackForm', this.formdeleterequest).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.GetFormDetails(this.geturequest);
+                    } else {
+                        console.warn(data.Message);
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+        } catch (error) {
+            this.appc.isLoading = false;
+        }
+    }
+
+    ResendFormRequest(reportid: number, dialog: Md2Dialog) {
+        this.dialogalertmessage = this.messageService.FeedbackDetailsMessage(2) // 'Are you sure you want to resend the form?';
+        dialog.open();
+        this.formdeleterequest = {
+            ReportId: reportid,
+            IsOut: 0,
+            AppUserId: this.apiservice.GetUserId()
+        };
+    }
+
+    RemoveRecursionFormRequest(reportid: number, dialog: Md2Dialog) {
+        this.appc.isLoading = true;
+        try {
+            this.apiservice.GetAPI('api/v1/Feedbacks/RemoveRecursionForm?reportId=' + this.apiservice.EncodeHex(reportid + '')).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.appc.isLoading = false;
+                        this.dialogalertmessage = this.messageService.FeedbackDetailsMessage(3)  //'Recursion Remove Successfully.';
+                        dialog.open();
+                    } else {
+                        this.appc.isLoading = false;
+                        console.warn(data.Message);
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+
+    OkDialogRemoveRecursion(alertRecursionDialog: Md2Dialog) {
+        alertRecursionDialog.close();
+        this.GetFormDetails(this.geturequest);
+    }
+
+    ResendFormConfirmation(alert: Md2Dialog, dialog: Md2Dialog) {
+        dialog.close();
+        this.appc.isLoading = true;
+        try {
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/ResendForm', this.formdeleterequest).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.appc.isLoading = false;
+                        this.dialogalertmessage = this.messageService.FeedbackDetailsMessage(6) // 'Form Sent.';
+                        alert.open();
+                        console.warn(data.Message);
+                    } else {
+                        this.appc.isLoading = false;
+                        console.warn(data.Message);
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+        } catch (error) {
+            this.appc.isLoading = false;
+        }
+    }
+
+    ResolveFormRequest(reportid: number, answerstatus: string, isout: boolean) {
+        try {
+            this.appc.isLoading = true;
+            if (!answerstatus) {
+                answerstatus = 'unresolvedall';
+            } else {
+                answerstatus = 'resolvedall';
+            }
+
+            let formresolverequest = {
+                ReportId: reportid,
+                AppUserId: this.apiservice.GetUserId(),
+                AnswerStatus: answerstatus,
+                IsOut: isout,
+                UserName: this.apiservice.GetCurrentUserName,
+                Password: '',
+                GroupId: this.apiservice.GetCurrentGroupId(),
+                latitude: this.geolocationlatitude,
+                longitude: this.geolocationlongitude
+            };
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/ResolveUnresolveForm', formresolverequest).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.GetFormDetails(this.geturequest);                   
+                    } else {
+                        this.appc.isLoading = false;
+                        console.warn(data.Message);
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+        } catch (error) {
+            this.appc.isLoading = false;
+        }
+    }
+
+    SetRemoveFromstatisticsRequest(objectRequest: any) {
+        this.appc.isLoading = true;
+        try {
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/FeedbackRemoveFromStatistics', objectRequest
+            ).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.GetFormDetails(this.geturequest);
+                    } else {
+                        this.appc.isLoading = false;
+                        console.warn(data.Message);
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+
+    onRemoveFromStatistics(event: any) {
+        this.RemoveFromStatisticsLabel = 'Enable';
+        this.SetRemoveFromstatisticsRequest(this.RemoveFromstatisticslistModel);
+    }
+
+    onSelectFormStatistics(checked: boolean, refid: number, isout: boolean) {
+        this.SelectOneForm = checked;
+        if (checked) {
+            this.RemoveFromstatisticslistModel.filter(t => t.ReportId === refid).forEach(c => c.HasDisable = false);
+        } else {
+            this.RemoveFromstatisticslistModel.filter(t => t.ReportId === refid).forEach(c => c.HasDisable = true);
+        }
+
+        this.SetRemoveFromstatisticsRequest(this.RemoveFromstatisticslistModel);
+    }
+
+    showDiv() {
+        this.hideToggle ? this.hideToggle = false : this.hideToggle = true;
+    }
+
+    CopyFormRequest(encodereportId: string,
+        encodeestablishmentId: string,
+        encodecontactmasterId: string,
+        encodeiscontactgroup: string,
+        encodecontactgroupname: string) {
+        this.appc.isLoading = true;
+        let urlPath = this.router.url;
+        this.apiservice.SetPreviousUrl(urlPath);
+        this.router.navigate(['/capturecopyedit'], {
+            queryParams: {
+                rid: encodereportId,
+                eid: encodeestablishmentId,
+                cmid: encodecontactmasterId,
+                iscg: encodeiscontactgroup,
+                isfrmc: this.apiservice.EncodeHex('1'),
+                ccf: this.apiservice.EncodeHex('1')
+            }
+        });
+    }
+
+    openTransferDialog(currentFormReportid: number,
+        currentFormIsOut: boolean,
+        currentFormUserId: string,
+        transfer: Md2Dialog) {
+        this.currentFormReportid = currentFormReportid;
+        this.currentFormIsOut = currentFormIsOut;
+        this.currentFormUserId = currentFormUserId;
+        this.TransferApplicationUserList = [];
+        transfer.open();
+        return false;
+    }
+
+    TransferFormRequest(reportid: number, isout: boolean, dialog: Md2Dialog) {
+        this.dialogalertdeader = this.apiservice.GetCurrentGroupName();
+        this.dialogalertmessage = this.messageService.FeedbackDetailsMessage(4) //'Are you sure Transfer?';
+        dialog.open();
+        this.formtransferrequest.ReportId = reportid;
+        this.formtransferrequest.IsOut = isout;
+        this.formtransferrequest.AppUserId = this.apiservice.GetUserId();
+        this.EstablishmentList = [];
+        this.TransferApplicationUserList = [];
+        this.formtransferrequest.EstablishmentId = this.TransferEstablishment;
+        this.formtransferrequest.NewAppUserId = this.TransferApplicationUsers;
+    }
+
+    TransferFormConfirmation(alert: Md2Dialog, dialog: Md2Dialog, transferdialog: Md2Dialog) {
+        dialog.close();
+        transferdialog.close();
+        this.appc.isLoading = true;
+        try {
+            this.apiservice.PostAPIWithObject('api/v1/Feedbacks/TransferForm', this.formtransferrequest).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.appc.isLoading = false;
+                        this.dialogalertmessage = this.messageService.FeedbackDetailsMessage(5) //'Form has been transferred to user successfully.';
+                        alert.open();
+                        let urlPath = this.router.url;
+                        let dynamicqueryParams: Array<any> = [];
+                        let parmas: Array<any> = [];
+                        dynamicqueryParams = urlPath.split('?')[1].split('&');
+                        for (let index = 0; index < dynamicqueryParams.length; index++) {
+                            parmas.push(dynamicqueryParams[index].split('=')[1])
+                        }
+
+                        this.router.navigate(['/feedbackdetail'], { queryParams: { 'fd': parmas[0], 'type': parmas[1]} });
+                   
+                    } else {
+                        this.appc.isLoading = false;
+                    }
+                },
+                err => {
+                    this.appc.isLoading = false;
+                    console.warn(err.Message);
+                });
+        } catch (error) {
+            this.appc.isLoading = false;
+        }
+    }
+
+    onChangeTransferEstablishmentId(event: any) {
+        this.appc.isLoading = true;
+        this.TransferApplicationUserList = [];
+        try {
+            let formData: FormData = new FormData();
+            formData.append('currentFormUserId', this.currentFormUserId);
+            formData.append('appUserId', this.apiservice.GetUserId());
+            formData.append('EstablishmentId', this.TransferEstablishment);
+            formData.append('activityId', this.apiservice.GetActivityId());
+            this.apiservice.UploadFiles('api/v1/Feedbacks/GetTransferAppUserList', formData).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        if (data.Result != null) {
+                            this.TransferApplicationUserList = data.Result;
+                        }
+                    };
+                    this.appc.isLoading = false;
+                },
+                err => {
+                    console.warn(err.Message);
+                    this.appc.isLoading = false;
+                });
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+
+    RedirectToChat(refid: string, moduleId: string, activityid: string) {
+        let urlPath = this.router.url;
+        this.apiservice.SetPreviousUrl(urlPath);
+        this.router.navigate(['/chat'], { queryParams: { rid: refid, mid: moduleId, aid: activityid, type: this.apiservice.EncodeHex(this.BackButtonType)} });
+    }
+
+
+    GoToBack() {
+        if (this.NotifySeenClientId > 1) {
+            this.router.navigate(['/notifications']);
+        } else {
+            if (this.BackButtonType == '') {
+                this.router.navigate(['/feedbacklist'], { queryParams: { aid: this.EncodeActivityId, acttype: this.apiservice.EncodeHex(this.ActivityType) } });
+            }
+            else {
+                this.router.navigate(['/feedbacklist'], { queryParams: { type: this.apiservice.EncodeHex(this.BackButtonType) } });
+            }
+
+        }
+    }
+
+
+    INOutFormFlagUpdate(ReportId: any, type: any, IsFlag: any) {
+        let appUserId = this.apiservice.GetUserId();
+        let CurrentActivityType = this.apiservice.CurrentActivityTypeNotification();
+        if (CurrentActivityType != null || CurrentActivityType != undefined || CurrentActivityType != "") {
+            CurrentActivityType = this.apiservice.CurrentActivityTypeNotification();
+        }
+        else {
+            CurrentActivityType = this.apiservice.GetCurrentActivityType();
+        }
+        let activitytype: number = 0;
+        if (CurrentActivityType === 'Sales'.toLowerCase()) {
+            activitytype = 0
+        }
+        else {
+            activitytype = 1
+        }
+        if (IsFlag == true) {
+            this.flag = false;
+        }
+        else {
+            this.flag = true;
+        }
+        this.appc.isLoading = true;
+        try {
+            let flagstring = ReportId + '|' + 0 + '|' + type + '|' + activitytype;
+            this.selectedNotificationFlagId.push(flagstring);
+            this.SelectCheckboxFlag = this.selectedNotificationFlagId.map(c => c).join(',');
+            this.url = 'api/v1/Notifications/UpdateNotificationFlag?notificationId='
+                + this.apiservice.EncodeHex(this.SelectCheckboxFlag) + '&flag=' + this.apiservice.EncodeHex(this.flag) + '&Appuserid=' + this.apiservice.EncodeHex(appUserId);
+            this.apiservice.GetAPI(this.url).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        if (data.Result != null) {
+                            this.GetFormDetails(this.geturequest);
+                            this.SelectCheckboxFlag = [];
+                            this.selectedNotificationFlagId = [];
+                        }
+                    }
+                },
+                err => {
+                    console.warn(err.Message);
+                    this.appc.isLoading = false;
+                }
+            );
+        } catch (error) {
+            console.warn(error);
+            this.appc.isLoading = false;
+        }
+    }
+
+    GetAllStatusIconEstablishmentId(EstablishmentId: any, CurrenttatusId: any) {
+        this.GetAllEstablishmentStatus = this.apiservice.GetAllEstablishmentStatusIcon();
+        this.GetAllEstablishmentStatusIcon = this.GetAllEstablishmentStatus.filter(c => c.EstablishmentId == EstablishmentId)
+        for (let index = 0; index < this.GetAllEstablishmentStatusIcon.length; index++) {
+            if (this.GetAllEstablishmentStatusIcon[index].StatusId == CurrenttatusId) {
+                this.GetAllEstablishmentStatusIcon[index].CurrentStatusId = true;
+            }
+            else {
+                this.GetAllEstablishmentStatusIcon[index].CurrentStatusId = false;
+            }
+        }
+    }
+
+    OnchangeStatusIcon(event: any, dialog: Md2Dialog) {
+        this.dialogalertdeader = this.apiservice.GetCurrentGroupName();
+        this.Message = this.messageService.StatusIconMessage(1) + ' ' + event.currentTarget.id + '?';
+        dialog.open();
+        this.statusIconreq.lgStatusId = event.currentTarget.value;
+        this.statusIconreq.Latitude = this.geolocationlatitude;
+        this.statusIconreq.Longitude = this.geolocationlongitude;
+        this.statusIconreq.lgAppUserId = this.apiservice.GetUserId();
+        this.apiservice.SetIdforSatusIcon(this.statusIconreq);
+    }
+
+    ConfiormChangeStatusIconyes(alertsave: any, alertStatusIcon: any) {
+        this.statusIconreq = this.apiservice.GetIdforSatusIcon();
+        try {
+            this.url = 'api/v1/Feedbacks/SaveStatusHistory';
+            this.apiservice.PostAPIWithObject(this.url, this.statusIconreq
+            ).subscribe(
+                data => {
+                    if (data.Status === 'Success') {
+                        this.GetFormDetails(this.geturequest);
+                        alertsave.close();
+                        alertStatusIcon.close();
+                    } else {
+                        console.warn(data.Message);
+                        this.GetFormDetails(this.geturequest);
+                        alertsave.close();
+                        alertStatusIcon.close();
+                    }
+                },
+                err => {
+                    console.warn(err.Message);
+                    this.GetFormDetails(this.geturequest);
+                    alertsave.close();
+                    alertStatusIcon.close();
+                });
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+
+    closemd2dialogStatus(dialog: any) {
+        this.GetAllEstablishmentStatus = this.apiservice.GetAllEstablishmentStatusIcon();
+        this.GetAllEstablishmentStatusIcon = this.GetAllEstablishmentStatus.filter(c => c.EstablishmentId == this.esId)
+        for (let index = 0; index < this.GetAllEstablishmentStatusIcon.length; index++) {
+            if (this.GetAllEstablishmentStatusIcon[index].StatusId == this.CurrenttatusId) {
+                this.GetAllEstablishmentStatusIcon[index].CurrentStatusId = true;
+            }
+            else {
+                this.GetAllEstablishmentStatusIcon[index].CurrentStatusId = false;
+            }
+        }
+        dialog.close();
+    }
+}
