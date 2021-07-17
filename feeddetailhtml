@@ -1,0 +1,677 @@
+<div class="titlerow">
+    <div (click)="GoToBack()" class="btnlinks icon-backarw default-backarw"></div>
+    <h1>&nbsp;</h1>
+</div>
+<div class="feeduserinfo">
+    <div class="feeduserphoto">
+        <img [src]="AppUserImageUrl" onerror="this.src='../assets/images/noprofile.png'" alt="" title="{{AppUserName}}">
+    </div>
+    <p class="username">
+        <strong>{{EstablishmentName}}</strong>
+        <span>{{AppUserName}}</span>
+    </p>
+    <div class="feedusericon">
+        <a *ngIf="!IsCustomerActivityType" [href]="'tel:' + AppUserMobile" class="phone">
+            <i class="btnlinks icon-call"></i>{{AppUserMobile}}</a>
+        <a *ngIf="!IsCustomerActivityType" [href]="'mailto:' + AppUserEmail" class="email">
+            <i class="btnlinks icon-mail"></i>{{AppUserEmail}}</a>
+    </div>
+</div>
+<div class="mgcontentarea paddingnone feeddetailsrow">
+    <div class="feedlist">
+        <div class="feeddetails">
+            <div *ngIf="!IsCustomerActivityType" class="capturerowgroup">
+                <div class="capturerow">
+                    <md2-accordion>
+                        <md2-accordion-tab>
+                            <md2-accordion-header> {{contactInfoName}}</md2-accordion-header>
+                            <div class="capturedescriptionrow">
+                                <p *ngIf="ContactGroupName">
+                                    <strong>{{'controlLabel.GroupName' | translate }} : </strong>{{ContactGroupName}}</p>
+                                <p *ngFor="let contact of ContactInfo let i = index" [attr.data-index]="i">
+                                    <span *ngIf="(contact.QuestionTypeId === 10)">
+                                        <strong>{{contact.QuestionTitle}} :</strong>
+                                        &nbsp;
+                                        <a [href]="'mailto:' + contact.Detail" class="emailLink">{{contact.Detail}}</a>
+                                    </span>
+                                    <span *ngIf="(contact.QuestionTypeId !== 10)">
+                                        <strong>{{contact.QuestionTitle}} :</strong> {{contact.Detail}}
+                                    </span>
+                                </p>
+                            </div>
+                        </md2-accordion-tab>
+                    </md2-accordion>
+                </div>
+            </div>
+            <div class="capturerowgroup">
+                <div *ngFor="let form of OutFormDetails let i = index" [attr.data-index]="i" class="capturerow feedrow">
+                    <div class="capturetitlerow">
+                        <div class="feedbackstatus">
+                            <div> #{{form.ReferenceId}}</div>                
+                            <div *ngIf="(form.StatusIconEstablishment)">
+                                <div *ngIf="(form.StatusImage != null)">
+                                    <a *ngIf="(StatusTimeSetting == 0)" (click)="OnClickStatusIcon(form.EncodeEstablishmentId,form.EncodeReportId, alertStatusIcon,form.StatusId)">
+                                        <img src="{{form.StatusImage}}" width="15" class="btnlinks">
+                                        <span>
+                                            {{form.StatusTime}}
+                                        </span>
+                                    </a>
+                                    <a *ngIf="(StatusTimeSetting == 1)" (click)="OnClickStatusIcon(form.EncodeEstablishmentId,form.EncodeReportId, alertStatusIcon,form.StatusId)">
+                                        <img src="{{form.StatusImage}}" width="15" class="btnlinks">
+                                        <span>
+                                            {{form.StatusCounter}}
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pullright reporticon">
+                            <a *ngIf="form.MobiLink" (click)="RedirectToMobi(form.MobiLink,form.IsReleased, form.IsMobiExpired, alertrequired,form.ReleaseDateValidationMessage, form.MobiExpiredValidationMessage)" target="_blank">
+                                <i mdTooltip="{{'controlLabel.Clicktoopen' | translate }} {{InName}} {{'controlLabel.Link' | translate }}." class="btnlinks icon-mobiform"></i>
+                            </a>
+                            <a (click)="ResendFormRequest(form.ReferenceId, alertResend)" *ngIf="form.IsResend">
+                                <i class="btnlinks icon-resend"></i>
+                            </a>
+                            <a *ngIf="ResolveAllRights" (click)="ResolveFormRequest(form.ReferenceId, form.Resolved, form.IsOut)">
+                                <i [ngStyle]="{'color': form.Resolved ? '#2cc56a' : '#989ba4'}" class="btnlinks {{form.IsOutStanding ? 'icon-singletick' : 'icon-twotick'}}"></i>
+                            </a>
+                            <i [ngStyle]="{'background': form.FormColor}" class="btnlinks icon-moreicn" [mdMenuTriggerFor]="capturelist"></i>
+                            <md-menu #capturelist="mdMenu" xPosition="before" class="feedlistmenu">
+                                <button *ngIf="!form.IsDisabled" (click)="SnapshotDisplaySingleForm(form.EncodeReportId, form.EncodeActivityId, form.EstablishmentId, form.AppUserId, form.IsOut)"
+                                    style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                    <i class="btnlinks icon-snapshot"></i>
+                                    <span class="text-bottom">{{'controlLabel.Snapshot' | translate }}</span>
+                                </button>
+                                <button (click)="MapDisplaySingleForm(form.ReferenceId, form.IsOut)" *ngIf="form.Latitude !='0.00'" style="font-size: 14px;font-weight: 100;"
+                                    md-menu-item>
+                                    <i class="btnlinks icon-mapicn"></i>
+                                    <span class="text-bottom">{{'controlLabel.Maps' | translate }}</span>
+                                </button>
+                                <button (click)="RemoveRecursionFormRequest(form.ReferenceId, alertRecursionDialog)" *ngIf="form.IsRecursion" style="font-size: 14px;font-weight: 100;"
+                                    md-menu-item>
+                                    <i class="btnlinks icon-removerecor"></i>
+                                    <span class="text-bottom">{{'controlLabel.RemovefromRecursion' | translate }}</span>
+                                </button>
+                                <button *ngIf="!form.IsTransferred" (click)="openTransferDialog(form.ReferenceId, form.IsOut, form.AppUserId, transferdialog)"
+                                    style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                    <i class="btnlinks icon-transfer"></i>
+                                    <span class="text-bottom">{{'controlLabel.Transfer' | translate }}</span>
+                                </button>
+                                <button (click)="CopyFormRequest(form.EncodeReportId, form.EncodeEstablishmentId, form.EncodeContactMasterId, form.EncodeHasContactGroup, form.EncodeContactGroupName)"
+                                    *ngIf="(form.IsOut && CaptureButtonDisplay)" style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                    <i class="btnlinks icon-copy"></i>
+                                    <span class="text-bottom">{{'controlLabel.Copy' | translate }}</span>
+                                </button>
+                                <button [hidden]="AllowExportData" *ngIf="AllowExportData" (click)="onExportPdfForm(form.ReferenceId, form.IsOut, alertrequired)"  style="font-size: 14px;font-weight: 100;"
+                                    md-menu-item>
+                                    <i class="btnlinks icon-exportpdf"></i>
+                                    <span class="text-bottom">{{'controlLabel.ExportPDF' | translate }}</span>
+                                </button>
+                                <div *ngIf="form.IsFlag">
+                                    <button (click)="INOutFormFlagUpdate(form.ReferenceId, CurrentActivityTypeout, form.IsFlag)" style="font-size: 14px;font-weight: 100;border-bottom:0.5px solid #bbb"
+                                        md-menu-item>
+                                        <i class="feedbacklist-flag">
+                                            <img src="../assets/images/blue_line.png" width="15" class="btnlinks icon-deletetwo">
+                                        </i>
+                                        <!-- <i class="btnlinks icon-deletetwo"></i> -->
+                                        <span class="text-bottom">{{'controlLabel.MarkasUnstar' | translate }}</span>
+                                    </button>
+                                </div>
+                                <div *ngIf="!form.IsFlag">
+                                    <button (click)="INOutFormFlagUpdate(form.ReferenceId, CurrentActivityTypeout, form.IsFlag)" style="font-size: 14px;font-weight: 100;border-bottom:0.5px solid #bbb"
+                                        md-menu-item>
+                                        <i class="feedbacklist-flag">
+                                            <img src="../assets/images/blue_fill.png" width="15" class="btnlinks icon-deletetwo">
+                                        </i>
+                                        <!-- <i class="btnlinks icon-deletetwo"></i> -->
+                                        <span class="text-bottom">{{'controlLabel.Markasstar' | translate }}</span>
+                                    </button>
+                                </div>
+                                <div *ngIf="(form.StatusIconEstablishment)">
+                                <button *ngIf="(form.StatusImage != null)" (click)="IconMapDisplaySingleForm(form.ReferenceId, form.IsOut)" style="font-size: 14px;font-weight: 100; border-bottom:0.5px solid #bbb" md-menu-item>
+                                    <i class="feedbacklist-flag">
+                                        <img src="../assets/images/status_history@2x.png" width="15" class="btnlinks icon-deletetwo" style="margin: 0 0 4px 0px;">
+                                    </i>
+                                    <span class="text-bottom">Status History</span>
+                                </button>
+                                 </div>
+                                 <button (click)="FormReadAuditlog(form.ReferenceId, form.IsOut)" style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                        <i class="feedbacklist-flag">
+                                            <img src="../assets/images/fromAuditlog.png" width="15" class="btnlinks icon-deletetwo" style="margin: 0 0 4px 0px;">
+                                        </i>
+                                        <span class="text-bottom">Read History </span>
+                                    </button>
+                            </md-menu>
+                        </div>
+                    </div>
+                    <div class="capturedescriptionrow">
+                        <div class="capturerow1  D--Feedbacklist-detail-row">
+                            <i class="btnlinks {{form.IsOut ? 'icon-outicn' : 'icon-inicn'}} D--Feedbacklist-detail"></i>
+                            <i *ngIf="form.ContactGropName" class="btnlinks icon-groupsm"></i>
+                            <div class="pl">
+                                <strong>{{'controlLabel.PI' | translate }}:</strong> {{form.PI}}</div>
+                            <div class="datetime">{{form.CaptureDate}}</div>
+                            <div class="pullright d-flex">
+                                <div class="checkboxdiv" *ngIf="acessremovefromstatistic">
+                                    <md-checkbox [checked]="SelectOneForm" (change)="onSelectFormStatistics(form.IsDisabled, form.ReferenceId, form.IsOut)">{{'controlLabel.Removefromstatistics' | translate }}</md-checkbox>
+                                </div>
+                                <div class="flagdiv" *ngIf="form.IsFlag">
+                                    <img src="../assets/images/gray.png">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="captureblockrow" style="padding-bottom: 7px;">
+                            <div *ngIf="InFormAvailable" (click)="showDiv()" class="feedtoggle" [ngClass]="[hideToggle ? 'down' : 'up']"></div>
+                            <div>
+                                <p class="username">
+                                    <i class="{{form.Ispositive == 'Positive'  ? 'icon-smaily4' : form.Ispositive == 'Neutral' || form.PI == 'N/A' ? 'icon-smaily3' : form.Ispositive == 'Negative' ? 'icon-smaily2' : 'icon-smaily1'}}"></i> {{form.ContactDetails}}
+                                </p>
+                                <div *ngFor="let citem of form.QuestionsCapturAnswers let i = index" [attr.data-index]="i">
+                                   <div *ngIf="(!citem.IsRepetitive)">
+                                    <p *ngIf="(citem.QuestionTypeId != 17 && citem.QuestionTypeId != 23 && citem.QuestionTypeId != 10 && citem.QuestionTypeId != 3 && citem.QuestionTypeId != 12 && citem.QuestionTypeId != 13)">
+                                        <span style="font-size: 15px;">{{citem.QuestionTitle}}</span>
+                                        <br>
+                                        <span style="color: #2b81c2;">{{citem.Detail}}</span>
+                                    </p>
+                                    <p *ngIf="(citem.QuestionTypeId == 3 || citem.QuestionTypeId == 12 || citem.QuestionTypeId == 13)">
+                                        <span style="font-size: 15px;">{{citem.QuestionTitle}}</span>
+                                        <br>
+                                        <span style="color: #2b81c2;white-space: pre-line">{{citem.Detail}}</span>
+                                    </p>
+                                    <p *ngIf="(citem.QuestionTypeId == 10)">
+                                        <strong>{{citem.QuestionTitle}} :</strong>
+                                        &nbsp;
+                                        <a [href]="'mailto:' + citem.Detail" class="emailLink">
+                                            {{citem.Detail}}
+                                        </a>
+                                    </p>
+                                    <p *ngIf="(citem.QuestionTypeId == 17 && citem.IsSignature)">
+                                        <span style="font-size: 15px;">{{citem.QuestionTitle}}</span>
+                                        <br>
+                                        <span *ngIf="(citem.Detail !== '')" style="display: inline-grid;position: relative;" disabled>
+                                            <span *ngFor="let file of GetAttachmentList(citem.Detail)" class="attachmentlist">
+                                                <a *ngIf="(file.Fileclass == 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                    style="pointer-events: none;  cursor: default;">
+                                                    <img class="imageblur" onerror="this.src='../assets/images/noImage.jpg'" [src]="file.FileNamePath" alt="">
+                                                    <br>{{file.FileName}}
+                                                </a>
+                                                <a *ngIf="(file.Fileclass != 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath">
+                                                    <i [class]="file.Fileclass"></i>
+                                                    <br>{{file.FileName}}
+                                                </a>
+                                            </span>
+                                        </span>
+                                    </p>
+                                    <p *ngIf="(citem.QuestionTypeId == 17 && !citem.IsSignature)">
+                                        <span style="font-size: 15px;">{{citem.QuestionTitle}}</span>
+                                        <br>
+                                        <span *ngIf="(citem.Detail !== '')" style="display: inline-grid;position: relative;">
+                                            <span *ngFor="let file of GetAttachmentList(citem.Detail)" class="attachmentlist">
+                                                <a *ngIf="(file.Fileclass == 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                    target="_blank">
+                                                    <img class="imageblur" onerror="this.src='../assets/images/noImage.jpg'" [src]="file.FileNamePath" alt="">
+                                                    <br>{{file.FileName}}
+                                                </a>
+                                                <a *ngIf="(file.Fileclass != 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                    target="_blank">
+                                                    <i [class]="file.Fileclass"></i>
+                                                    <br>{{file.FileName}}
+                                                </a>
+                                            </span>
+                                        </span>
+                                    </p>
+                                    <p *ngIf="(citem.QuestionTypeId == 23)" [style.text-align]="citem.ImageAlign">
+                                        <span style="font-size: 15px;">{{citem.QuestionTitle}}</span>
+                                        <br>
+                                        <img [style.height.px]="citem.ImageHeight" [style.width.px]="citem.ImageWidth" onerror="this.src='../assets/images/noImage.jpg'"
+                                            [src]="citem.URL + citem.Detail" alt="">
+                                    </p>
+                                  </div>
+                                    <div *ngIf="(citem.IsRepetitive)">
+                                     <div *ngFor="let itemGroup of citem.GroupQuestions let i = index" [attr.data-index]="i">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">{{itemGroup.QuestionGroupName}}</div>
+                                        <div class="panel-body">
+                                            <div *ngFor="let item of itemGroup.lstQuestions let i = index" [attr.data-index]="i">
+                                                    <p *ngIf="(item.QuestionTypeId != 17 && item.QuestionTypeId != 23 && item.QuestionTypeId != 10 && item.QuestionTypeId != 3 && item.QuestionTypeId != 12 && item.QuestionTypeId != 13)">
+                                                        <span style="font-size: 15px;">{{item.QuestionTitle}}</span>
+                                                        <br>
+                                                        <span style="color: #2b81c2;">{{item.Detail}}</span>
+                                                    </p>
+                                                    <p *ngIf="(item.QuestionTypeId == 3 || item.QuestionTypeId == 12 || item.QuestionTypeId == 13)">
+                                                        <span style="font-size: 15px;">{{item.QuestionTitle}}</span>
+                                                        <br>
+                                                        <span style="color: #2b81c2;white-space: pre-line">{{item.Detail}}</span>
+                                                    </p>
+                                                    <p *ngIf="(item.QuestionTypeId == 10)">
+                                                        <span style="font-size: 15px;">{{item.QuestionTitle}}</span>
+                                                        <br>
+                                                        <a [href]="'mailto:' + item.Detail" class="emailLink">
+                                                            {{item.Detail}}
+                                                        </a>
+                                                    </p>
+                                                    <p *ngIf="(item.QuestionTypeId == 17 && item.IsSignature)">
+                                                        <span style="font-size: 15px;">{{item.QuestionTitle}}</span>
+                                                        <br>
+                                                        <span *ngIf="(item.Detail !== '')" style="display: inline-grid;position: relative;" disabled>
+                                                            <span *ngFor="let file of GetAttachmentList(item.Detail)" class="attachmentlist">
+                                                                <a *ngIf="(file.Fileclass == 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                                    style="pointer-events: none;  cursor: default;">
+                                                                    <img class="imageblur" onerror="this.src='../assets/images/noImage.jpg'" [src]="file.FileNamePath" alt="">
+                                                                    <br>{{file.FileName}}
+                                                                </a>
+                                                                <a *ngIf="(file.Fileclass != 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath">
+                                                                    <i [class]="file.Fileclass"></i>
+                                                                    <br>{{file.FileName}}
+                                                                </a>
+                                                            </span>
+                                                        </span>
+                                                    </p>
+                                                    <p *ngIf="(item.QuestionTypeId == 17 && !item.IsSignature)">
+                                                        <span style="font-size: 15px;">{{item.QuestionTitle}}</span>
+                                                        <br>
+                                                        <span *ngIf="(item.Detail !== '')" style="display: inline-grid;position: relative;">
+                                                            <span *ngFor="let file of GetAttachmentList(item.Detail)" class="attachmentlist">
+                                                                <a *ngIf="(file.Fileclass == 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                                    target="_blank">
+                                                                    <img class="imageblur" onerror="this.src='../assets/images/noImage.jpg'" [src]="file.FileNamePath" alt="">
+                                                                    <br>{{file.FileName}}
+                                                                </a>
+                                                                <a *ngIf="(file.Fileclass != 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                                    target="_blank">
+                                                                    <i [class]="file.Fileclass"></i>
+                                                                    <br>{{file.FileName}}
+                                                                </a>
+                                                            </span>
+                                                        </span>
+                                                    </p>
+                                                    <p *ngIf="(item.QuestionTypeId == 23)">
+                                                        <span style="font-size: 15px;">{{item.QuestionTitle}}</span>
+                                                        <br>
+                                                        <img style="max-width: 100%;" onerror="this.src='../assets/images/noImage.jpg'" [src]="item.Detail" alt="">
+                                                    </p>
+                                               
+                                            </div>
+                                        </div>
+                                    </div>
+                                  </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lightbluebg" [ngClass]="[hideToggle ? 'show' : 'hide']" [ngClass]="{'disableDivFortender': IsGrayOut}">
+                    <div *ngIf="InFormAvailable" class="captureconnect"></div>
+                    <div *ngFor="let inform of InFormDetails let i = index" [attr.data-index]="i" class="capturerow feedrow D--feedrow">
+                        <div style="cursor: default;background: #e8eaf6;padding: 0px 15px 0px 27px;border-bottom: 0;text-align: left;" class="capturetitlerow">
+                            <div class="D--feedrow-id" *ngIf="InFormRefNumber" [ngClass]="{'blurDivFortender': IsGrayOut}">
+                                <span>#{{inform.ReferenceId}}</span>
+                            </div>
+                            <div class="pullright" [ngClass]="{'disableDivFortender': IsGrayOut}">
+                                <!-- <a *ngIf="ResolveAllRights" (click)="ResolveFormRequest(inform.ReferenceId, inform.Resolved, inform.IsOut)">
+                                    <i [ngStyle]="{'color': inform.Resolved ? '#2cc56a' : '#989ba4'}" class="btnlinks {{inform.IsOutStanding ? 'icon-singletick' : 'icon-twotick'}}"></i>
+                                </a> -->
+                                <i [ngStyle]="{'color': inform.FormColor, 'background': 'none'}" class="btnlinks icon-moreicn" [mdMenuTriggerFor]="capturelist"></i>
+                                <md-menu #capturelist="mdMenu" xPosition="before" class="feedlistmenu">
+                                    <button *ngIf="!inform.IsDisable" (click)="SnapshotDisplaySingleForm(inform.EncodeInReportId, inform.EncodeActivityId, inform.EstablishmentId, inform.AppUserId, false)"
+                                        style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                        <i class="btnlinks icon-snapshot"></i>
+                                        <span class="text-bottom">{{'controlLabel.Snapshot' | translate }}</span>
+                                    </button>
+                                    <button (click)="MapDisplaySingleForm(inform.ReferenceId, false)" *ngIf="inform.Latitude" style="font-size: 14px;font-weight: 100;"
+                                        md-menu-item>
+                                        <i class="btnlinks icon-mapicn"></i>
+                                        <span class="text-bottom">{{'controlLabel.Maps' | translate }}</span>
+                                    </button>
+                                    <button *ngIf="!inform.IsTransferred" (click)="openTransferDialog(inform.ReferenceId, false, inform.AppUserId, transferdialog)"
+                                        style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                        <i class="btnlinks icon-transfer"></i>
+                                        <span class="text-bottom">{{'controlLabel.Transfer' | translate }}</span>
+                                    </button>
+                                    <button *ngIf="allowdeleteform" style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                        <i class="btnlinks icon-deletetwo"></i>
+                                        <span class="text-bottom">{{'controlLabel.Trash' | translate }}</span>
+                                    </button>
+                                    <div *ngIf="inform.IsFlag">
+                                        <button (click)="INOutFormFlagUpdate(inform.ReferenceId, CurrentActivityTypeIN, inform.IsFlag)" style="font-size: 14px;font-weight: 100;"
+                                            md-menu-item>
+                                            <i class="feedbacklist-flag">
+                                                <img src="../assets/images/blue_line.png" width="15" class="btnlinks icon-deletetwo">
+                                            </i>
+                                            <!-- <i class="btnlinks icon-deletetwo"></i> -->
+                                            <span class="text-bottom">{{'controlLabel.MarkasUnstar' | translate }}</span>
+                                        </button>
+                                    </div>
+                                    <div *ngIf="!inform.IsFlag">
+                                        <button (click)="INOutFormFlagUpdate(inform.ReferenceId, CurrentActivityTypeIN, inform.IsFlag)" style="font-size: 14px;font-weight: 100;"
+                                            md-menu-item>
+                                            <i class="feedbacklist-flag">
+                                                <img src="../assets/images/blue_fill.png" width="15" class="btnlinks icon-deletetwo">
+                                            </i>
+                                            <!-- <i class="btnlinks icon-deletetwo"></i> -->
+                                            <span class="text-bottom">{{'controlLabel.Markasstar' | translate }}</span>
+                                        </button>
+                                    </div>
+                                </md-menu>
+                            </div>
+                        </div>
+                        <div class="capturedescriptionrow" style="padding: 0px 15px 5px 15px;">
+                            <div class="capturerow1 D--Feedbacklist-detail-row" [ngClass]="{'disableDivFortender': IsGrayOut}">
+                                <i class="btnlinks icon-inicn D--Feedbacklist-detail"></i>
+                                <div class="pl" [ngClass]="{'blurDivFortender': IsGrayOut}">
+                                    <strong>{{'controlLabel.PI' | translate }}:</strong> {{inform.PI}}</div>
+                                <div class="datetime" [ngClass]="{'blurDivFortender': IsGrayOut}">{{inform.CaptureDate}}</div>
+                                <div class="pullright d-flex">
+                                    <div class="checkboxdiv" *ngIf="acessremovefromstatistic" [ngClass]="{'disableDivFortender': IsGrayOut}">
+                                        <md-checkbox [checked]="SelectOneForm" (change)="onSelectFormStatistics(inform.IsDisable, inform.ReferenceId, false)">{{'controlLabel.Removefromstatistics' | translate }}</md-checkbox>
+                                    </div>
+                                    <div class="flagdiv" *ngIf="inform.IsFlag">
+                                        <img src="../assets/images/gray.png">
+                                    </div>
+                                </div>
+                            </div>
+                                    <div class="captureblockrow">
+                                                <p class="username">
+                                                    <i class="{{inform.Ispositive == 'Positive'  ? 'icon-smaily4' : inform.Ispositive == 'Neutral' || inform.PI == 'N/A'? 'icon-smaily3' : inform.Ispositive == 'Negative' ? 'icon-smaily2' : 'icon-smaily1'}}"></i> 
+                                                    <span [ngClass]="{'blurDivFortender': IsGrayOut}">{{inform.ContactDetails}}</span>
+                                                </p>
+                                            <div *ngFor="let citem of inform.QuestionsCapturAnswers let i = index" [attr.data-index]="i" [ngClass]="{'blurDivFortender': IsGrayOut}">
+                                                <div *ngIf="(!citem.IsRepetitive)">
+                                                    <p *ngIf="(citem.QuestionTypeId != 17 && citem.QuestionTypeId != 23 && citem.QuestionTypeId != 10  && citem.QuestionTypeId != 3 && citem.QuestionTypeId != 12 && citem.QuestionTypeId != 13)">
+                                                        <span style="font-size: 15px;">{{citem.QuestionTitle}}</span>
+                                                        <br>
+                                                        <span style="color: #2b81c2;">{{citem.Detail}}</span>
+                                                    </p>
+                                                    <p *ngIf="(citem.QuestionTypeId == 3 || citem.QuestionTypeId == 12 || citem.QuestionTypeId == 13)">
+                                                        <span style="font-size: 15px;">{{citem.QuestionTitle}}</span>
+                                                        <br>
+                                                        <span style="color: #2b81c2;white-space: pre-line">{{citem.Detail}}</span>
+                                                    </p>
+                                                    <div *ngIf="(citem.QuestionTypeId == 10)">
+                                                        <strong>{{citem.QuestionTitle}} :</strong>
+                                                        &nbsp;
+                                                        <a [href]="'mailto:' + citem.Detail" class="emailLink">
+                                                            {{citem.Detail}}
+                                                        </a>
+                                                    </div>
+                                                    <div *ngIf="(citem.QuestionTypeId == 17 && citem.IsSignature)">
+                                                        <span style="font-size: 15px;">{{citem.QuestionTitle}}</span>
+                                                        <br>
+                                                        <span *ngIf="(citem.Detail !== '')" style="display: inline-grid;position: relative;" disabled>
+                                                            <span *ngFor="let file of GetAttachmentList(citem.Detail)" class="attachmentlist">
+                                                                <a *ngIf="(file.Fileclass == 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                                    style="pointer-events: none;  cursor: default;">
+                                                                    <img width="250px" height="200px" onerror="this.src='../assets/images/noImage.jpg'" [src]="file.FileNamePath" alt="">
+                                                                    <br>{{file.FileName}}
+                                                                </a>
+                                                                <a *ngIf="(file.Fileclass != 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath">
+                                                                    <i [class]="file.Fileclass"></i>
+                                                                    <br>{{file.FileName}}
+                                                                </a>
+                                                            </span>
+                                                        </span>
+                                                    </div>
+                                                    <div *ngIf="(citem.QuestionTypeId == 17 && !citem.IsSignature)">
+                                                        <p>
+                                                            <span style="font-size: 15px;">{{citem.QuestionTitle}}</span>
+                                                        </p>
+                                                        <div *ngIf="(citem.Detail !== '')" style="display: inline-grid;position: relative;">
+                                                            <p *ngFor="let file of GetAttachmentList(citem.Detail)" class="attachmentlist">
+                                                                <a *ngIf="(file.Fileclass == 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                                    target="_blank">
+                                                                    <img class="imageblur" width="250px" height="200px" onerror="this.src='../assets/images/noImage.jpg'" [src]="file.FileNamePath" alt="">
+                                                                    <br>{{file.FileName}}
+                                                                </a>
+                                                                <a *ngIf="(file.Fileclass != 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                                    target="_blank">
+                                                                    <i [class]="file.Fileclass"></i>
+                                                                    <br>{{file.FileName}}
+                                                                </a>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div *ngIf="(citem.QuestionTypeId == 23)" [style.text-align]="citem.ImageAlign">
+                                                        <p>
+                                                            <span style="font-size: 15px;">{{citem.QuestionTitle}}</span>
+                                                        </p>
+                                                        <br>
+                                                        <img [style.height.px]="citem.ImageHeight" [style.width.px]="citem.ImageWidth" onerror="this.src='../assets/images/noImage.jpg'"
+                                                            [src]="citem.URL + citem.Detail" alt="{{citem.QuestionTitle}}">
+                                                    </div>
+                                                </div>
+                                                <div *ngIf="(citem.IsRepetitive)">
+                                                        <div *ngFor="let itemGroup of citem.GroupQuestions let i = index" [attr.data-index]="i">
+                                                            <div class="panel panel-default">
+                                                                <div class="panel-heading">{{itemGroup.QuestionGroupName}}</div>
+                                                                <div class="panel-body">
+                                                                    <div *ngFor="let item of itemGroup.lstQuestions let i = index" [attr.data-index]="i">
+                                                                            <p *ngIf="(item.QuestionTypeId != 17 && item.QuestionTypeId != 23 && item.QuestionTypeId != 10 && item.QuestionTypeId != 3 && item.QuestionTypeId != 12 && item.QuestionTypeId != 13)">
+                                                                                <span style="font-size: 15px;">{{item.QuestionTitle}}</span>
+                                                                                <br>
+                                                                                <span style="color: #2b81c2;">{{item.Detail}}</span>
+                                                                            </p>
+                                                                            <p *ngIf="(item.QuestionTypeId == 3 || item.QuestionTypeId == 12 || item.QuestionTypeId == 13)">
+                                                                                <span style="font-size: 15px;">{{item.QuestionTitle}}</span>
+                                                                                <br>
+                                                                                <span style="color: #2b81c2;white-space: pre-line">{{item.Detail}}</span>
+                                                                            </p>
+                                                                            <div *ngIf="(item.QuestionTypeId == 10)">
+                                                                                <strong>{{item.QuestionTitle}} :</strong>
+                                                                                &nbsp;
+                                                                                <a [href]="'mailto:' + item.Detail" class="emailLink">
+                                                                                    {{item.Detail}}
+                                                                                </a>
+                                                                            </div>
+                                                                            <div *ngIf="(item.QuestionTypeId == 17 && item.IsSignature)">
+                                                                                <span style="font-size: 15px;">{{item.QuestionTitle}}</span>
+                                                                                <br>
+
+                                                                                <div *ngIf="(item.Detail !== '')" style="display: inline-grid;position: relative;">
+                                                                                    <p *ngFor="let file of GetAttachmentList(item.Detail)" class="attachmentlist">
+                                                                                        <a *ngIf="(file.Fileclass == 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                                                            style="pointer-events: none;  cursor: default;">
+                                                                                            <img width="250px" height="200px" onerror="this.src='../assets/images/noImage.jpg'" [src]="file.FileNamePath" alt="">
+                                                                                            <br>{{file.FileName}}
+                                                                                        </a>
+                                                                                        <a *ngIf="(file.Fileclass != 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                                                            style="pointer-events: none;  cursor: default;">
+                                                                                            <i [class]="file.Fileclass"></i>
+                                                                                            <br>{{file.FileName}}
+                                                                                        </a>
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div *ngIf="(item.QuestionTypeId == 17 && !item.IsSignature)">
+                                                                                <p>
+                                                                                    <span style="font-size: 15px;">{{item.QuestionTitle}}</span>
+                                                                                </p>
+                                                                                <div *ngIf="(item.Detail !== '')" style="display: inline-grid;position: relative;">
+                                                                                    <p *ngFor="let file of GetAttachmentList(item.Detail, inform.PathUrl)" class="attachmentlist">
+                                                                                        <a *ngIf="(file.Fileclass == 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                                                            target="_blank">
+                                                                                            <img width="250px" height="200px" onerror="this.src='../assets/images/noImage.jpg'" [src]="file.FileNamePath" alt="">
+                                                                                            <br>{{file.FileName}}
+                                                                                        </a>
+                                                                                        <a *ngIf="(file.Fileclass != 'imagefile fontsize30')" title="{{'tooltip.Clicktodonwload' | translate}}" [href]="file.FileNamePath"
+                                                                                            target="_blank">
+                                                                                            <i [class]="file.Fileclass"></i>
+                                                                                            <br>{{file.FileName}}
+                                                                                        </a>
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div *ngIf="(item.QuestionTypeId == 23)">
+                                                                                <p>
+                                                                                    <span style="font-size: 15px;">{{item.QuestionTitle}}</span>
+                                                                                </p>
+                                                                                <br>
+                                                                                <img style="max-width: 100%;" onerror="this.src='../assets/images/noImage.jpg'" [src]="item.Detail" alt="">
+                                                                            </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                </div>
+                                            </div>
+                                    </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+           
+        </div>
+        <div style="margin-top: 0px;" (click)="RedirectToChat(EncodeRefId, EncodeModuleId, EncodeActivityId)" class="msgrow" >
+            <div class="feedicon" >
+                <i class="icon-chat"></i>
+                <div *ngIf="UnreadActionCount" class="msgalert">{{UnreadActionCount}}</div>
+            </div>
+            <div>{{PreviousFormLastChat}}</div>
+            <div *ngIf="!PreviousFormLastChat" style="color: #d8d8d8;">{{'Comman.NoActions' | translate}}.</div>
+        </div>
+    </div>
+</div>
+<md2-dialog #alertStatusIcon>
+    <md2-dialog-title>{{'Comman.SatutsIconList' | translate}}</md2-dialog-title>
+    <h6 [innerHTML]="dialogalertmessage"></h6>
+    <md2-dialog-footer class="p-0 mrt-40">
+        <div class="activity-popup-Statu">
+            <div class="activdashboarbody table-design-custom">
+                <table cellpadding="0" class="table">
+                    <tbody>
+                        <tr>
+                            <th>{{'Comman.Image' | translate}}</th>
+                            <th>{{'Comman.Name' | translate}}</th>
+                            <th>{{'Comman.Action' | translate}}</th>
+                        </tr>
+                        <tr mdbTableCol *ngFor="let obj of GetAllEstablishmentStatusIcon let i = index" [attr.data-index]="i" class="notificationflaglist">
+                            <td *ngIf="!obj.CurrentStatusId">
+                                <img src="{{obj.StatusImage}}" width="15" class="btnlinks" style="margin-left: 22px;">
+                            </td>
+                            <td *ngIf="obj.CurrentStatusId" style="opacity: 0.7;cursor: none">
+                                <img src="{{obj.StatusImage}}" width="15" class="btnlinks" style="margin-left: 22px;">
+                            </td>
+                            <td *ngIf="!obj.CurrentStatusId">{{obj.StatusName}} </td>
+                            <td *ngIf="obj.CurrentStatusId" style="opacity: 0.7;cursor: none">{{obj.StatusName}} </td>
+                            <td *ngIf="!obj.CurrentStatusId">
+                                <input type="radio" name="radiogroup" value="{{obj.StatusId}}" id='{{obj.StatusName}}' (change)="OnchangeStatusIcon($event,alertStatusClearall)">
+                            </td>
+                            <td *ngIf="obj.CurrentStatusId">
+                                <input disabled type="radio" name="radiogroup" style="cursor: none" value="{{obj.StatusId}}" id='{{obj.StatusName}}' (change)="OnchangeStatusIcon($event,alertStatusClearall)">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+
+                <md2-dialog #alertStatusClearall>
+                    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+                    <h6>{{Message}}</h6>
+                    <md2-dialog-footer>
+                        <div class="actionbtn textcenter marginnone">
+                            <a class="btn submit" (click)="ConfiormChangeStatusIconyes(alertStatusClearall, alertStatusIcon)">{{'Comman.Yes' | translate}}</a>
+                            <a class="btn submit" (click)="closemd2dialogStatus(alertStatusClearall)">{{'Comman.No' | translate}}</a>
+                        </div>
+                    </md2-dialog-footer>
+                </md2-dialog>
+            </div>
+        </div>
+
+    </md2-dialog-footer>
+</md2-dialog>
+
+
+<md2-dialog #alertrequired>
+    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+    <div style="color: #000; font-size: 15px;float: left;">{{dialogalertmessage}}</div>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a class="btn submit" (click)="closemd2dialog(alertrequired)">{{'Comman.Ok' | translate}}
+            </a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
+<md2-dialog #alertRecursionDialog>
+    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+    <div style="color: #000; font-size: 15px;float: left;">{{dialogalertmessage}}</div>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a class="btn submit" (click)="OkDialogRemoveRecursion(alertRecursionDialog)">{{'Comman.Ok' | translate}}
+            </a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
+<md2-dialog #alertDelete>
+    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+    <div style="color: #000; font-size: 15px;float: left;">{{dialogalertmessage}}</div>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a class="btn submit" (click)="DeleteFormConfirmation(alertDelete)">{{'Comman.Yes' | translate}}</a>
+            <a class="btn submit" (click)="closemd2dialog(alertDelete)">{{'Comman.No' | translate}}</a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
+<md2-dialog #alertResend>
+    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+    <div style="color: #000; font-size: 15px;float: left;">{{dialogalertmessage}}</div>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a class="btn submit" (click)="ResendFormConfirmation(alertrequired, alertResend)">{{'Comman.Yes' | translate}}</a>
+            <a class="btn submit" (click)="closemd2dialog(alertResend)">{{'Comman.No' | translate}}</a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
+<md2-dialog #alertTransfer>
+    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+    <div style="color: #000; font-size: 15px;float: left;">{{dialogalertmessage}}</div>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a class="btn submit" (click)="TransferFormConfirmation(alertrequired, alertTransfer, transferdialog)">{{'Comman.Yes' | translate}}</a>
+            <a class="btn submit" (click)="closemd2dialog(alertTransfer)">{{'Comman.No' | translate}}</a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
+<md2-dialog #transferdialog>
+    <md2-dialog-title>{{'controlLabel.TransferForm' | translate }}</md2-dialog-title>
+    <div class="attachmentpopup">
+        <form class="formblock" style="max-height: 260px;overflow-y: auto;margin: 0 -5px; min-width:300px;">
+            <div class="row transfer">
+                <div class="fieldgroup">
+                    <ul>
+                        <li>
+                            <h6>{{'placeholder.SelectEstablishment' | translate}}</h6>
+                        </li>
+                        <li>
+                            <select (change)="onChangeTransferEstablishmentId($event)" name="TransferEstablishment" [(ngModel)]="TransferEstablishment"
+                                placeholder="Select Establishmen">
+                                <option *ngFor="let establishment of EstablishmentList" [value]="establishment.Value">
+                                    {{ establishment.Text }}
+                                </option>
+                            </select>
+                        </li>
+                    </ul>
+                </div>
+                <div class="fieldgroup">
+                    <ul>
+                        <li>
+                            <h6>{{'placeholder.SelectUser'| translate }}</h6>
+                        </li>
+                        <li>
+                            <select name="TransferApplicationUsers" [(ngModel)]="TransferApplicationUsers" placeholder="Select User">
+                                <option *ngFor="let user of TransferApplicationUserList" [value]="user.Value">
+                                    {{ user.Text }}
+                                </option>
+                            </select>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+    </div>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a (click)="TransferFormRequest(currentFormReportid, currentFormIsOut, alertTransfer)" class="btn submit">{{'controlLabel.Transfer' | translate }}</a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
