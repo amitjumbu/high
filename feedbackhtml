@@ -1,0 +1,862 @@
+<div class="titlerow">
+    <div (click)="gotodashboard()" class="btnlinks icon-backarw default-backarw"></div>
+    <h1>
+        <ol>
+            <li>
+                {{FeedbackListDisplayName}}
+            </li>
+            <li>
+                <span>{{currentActivityName}}</span>
+            </li>
+        </ol>
+    </h1>
+    <div class="titleright feedbackicon new-feedback-right" style="right: 2px;">
+        <div [hidden]="AllowExportData" *ngIf="AllowExportData" (click)="OnExcelExport(alertrequired)"class="btnlinks icon-exportexcl" [ngClass]=""></div>
+        <div class="btnlinks">
+            <a (click)="MapDisplayallforms()">
+                <i class="icon-mapicn"></i>
+            </a>
+        </div>
+        <div class="btnlinks search-btn">
+            <a>
+                <i *ngIf="!show" class="icon-search" (click)="toggle()"></i>
+                <i *ngIf="show" class="icon-close" (click)="toggle()"></i>
+            </a>
+        </div>
+    </div>
+    <div class="main-new-filter-block feedbackshorting">
+        <div class="filter-block-left">
+            <div class="btnlinks icon-listicn" [mdMenuTriggerFor]="menu"></div>
+            <md-menu #menu="mdMenu" xPosition="before" class="menuheight">
+                <button [ngClass]="{'active': buttonselectedIndex == 1}" (click)="onFormSortBy($event,1)" attr.data-sortby="LastForm" md-menu-item>{{'Comman.SortbyLastForm' | translate}}</button>
+                <button [ngClass]="{'active': buttonselectedIndex == 4}" (click)="onFormSortBy($event,4)" attr.data-sortby="ResponseForm"
+                    md-menu-item>{{'Comman.SortbyLastChatforResponseForm' | translate}}</button>
+                <button [ngClass]="{'active': buttonselectedIndex == 2}" (click)="onFormSortBy($event,2)" attr.data-sortby="LastChat" md-menu-item>{{'Comman.SortbyLastChatforMe' | translate}}</button>
+                <button [ngClass]="{'active': buttonselectedIndex == 3}" (click)="onFormSortBy($event,3)" attr.data-sortby="LastChatAll"
+                    md-menu-item>{{'Comman.SortbyLastChatforEveryone' | translate}}</button>
+            </md-menu>
+            <p *ngIf="(buttonselectedIndex == 1)">{{'Comman.SortbyLastForm' | translate}}</p>
+            <p *ngIf="(buttonselectedIndex == 2)">{{'Comman.SortbyLastChatforMe' | translate}}</p>
+            <p *ngIf="(buttonselectedIndex == 3)">{{'Comman.SortbyLastChatforEveryone' | translate}}</p>
+            <p *ngIf="(buttonselectedIndex == 4)">{{'Comman.SortbyLastChatforResponseForm' | translate}}</p>
+        </div>
+        <div class="filter-block-right">
+            <div title="{{'tooltip.Clicktoopensearchfilter' | translate}}" [ngClass]="[filterselected ? 'btnlinks icon-search-check' : 'btnlinks icon-search']"
+                (click)="Searchfilter()"></div>
+            <div class="unresolved-count" [ngClass]="{'active': selectedIndex == 4}" (click)="onSmileyTypesSortby($event,4)" attr.data-sortby="Unresolved">
+                {{UnresolvedCountLabel}} -
+                <span class="black">{{UnresolvedCount}}</span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="filterblock new-filter-box" style="max-width:420px" [ngClass]="[FilterToggle ? 'slideshow' : 'slidehide']">
+    <div class="titlerow">
+        <div class="titleright">
+            <div class="clear-link reset-btn" (click)="onClearConfirmationDialog(alertClearall)">
+                <h1>{{'Comman.reset' | translate}}</h1>
+            </div>
+        </div>
+        <h1>{{'Comman.Filter' | translate}}</h1>
+        <div (click)="Searchfilter()" class="btnlinks icon-backarw"></div>
+    </div>
+    <div class="filtercontent">
+        <div class="feedback-number-list">
+            <ul>
+                <li [ngClass]="{'active': selectedIndex == 1}" (click)="onSmileyTypesSortbyFilter($event,1)" attr.data-sortby="Positive">
+                    {{PositiveCountLabel}}
+                    <span class="green">- {{PositiveCount}}</span>
+                </li>
+                <li [ngClass]="{'active': selectedIndex == 2}" (click)="onSmileyTypesSortbyFilter($event,2)" attr.data-sortby="Neutral">
+                    {{NeutralCountLabel}}
+                    <span class="neutral">- {{NeutralCount}}</span>
+                </li>
+                <li [ngClass]="{'active': selectedIndex == 3}" (click)="onSmileyTypesSortbyFilter($event,3)" attr.data-sortby="Negative">
+                    {{NegativeCountLabel}}
+                    <span class="red">- {{NegativeCount}}</span>
+                </li>
+            </ul>
+        </div>
+        <form class="formblock" [formGroup]="searchfieldsModel" (ngSubmit)="onFilterApply(alertrequired,0)" novalidate>
+            <div class="card">
+                <div class="fieldgroup establishment">
+                    <label>{{establishmentListDisplayName}}</label>
+                    <md-select (change)="onSelectEstablishment($event)" selected="appSeluser" multiple formControlName="DDEstablishment" placeholder="{{'Comman.Allselected' | translate}}">
+                        <div style="margin: 10px 10px 0px 16px;">
+                            <input #estSearch style="width: 100%;margin-bottom: 10px;padding: 5px 5px;border-radius: 3px; border: 1px solid #bbb;" (keyup)="onSearchEstablishment(estSearch.value)"
+                                placeholder="{{'Comman.Search' | translate}}" type="text">
+                            <br>
+                            <label class="containerbox">
+                                <input (change)="onSelectAllEstablishmentFilter($event)" type="checkbox"> {{'Comman.SelectAll' | translate}}
+                                <span class="checkmarkbox"></span>
+                            </label>
+                        </div>
+                        <md-option *ngFor="let establishment of EstablishmentList" [value]="establishment.Value">
+                            {{ establishment.Text }}
+                        </md-option>
+                    </md-select>
+                </div>
+            </div>
+            <div class="card" *ngIf="IsCustomerType">
+                <div class="fieldgroup establishment">
+                    <label>{{UserListDisplayName }}</label>
+                    <md-select (change)="onSelectUserList($event)" multiple formControlName="DDApplicationUsers" placeholder="{{'Comman.Allselected' | translate}}">
+                        <div style="margin: 10px 10px 0px 16px;">
+                            <input #userSearch style="width: 100%;margin-bottom: 10px;padding: 5px 5px;border-radius: 3px; border: 1px solid #bbb;" (keyup)="onSearchUser(userSearch.value)"
+                                placeholder="{{'Comman.Search' | translate}}" type="text">
+                            <br>
+                            <label class="containerbox">
+                                <input (change)="onSelectAllUserFilter($event)" type="checkbox"> {{'Comman.SelectAll' | translate}}
+                                <span class="checkmarkbox"></span>
+                            </label>
+                        </div>
+                        <md-option *ngFor="let user of ApplicationUsersList" [value]="user.Value">
+                            {{ user.Text }}
+                        </md-option>
+                    </md-select>
+                </div>
+            </div>
+            <div class="card">
+                <div class="fieldgroup">
+                  <div class="d-flex justify-between">
+                    <label>
+                        {{'controlLabel.PI' | translate }}
+                    </label>
+                  <div class="d-flex" *ngIf="IsCustomerType"><md-slide-toggle  class=" InOutToggle" (change)="inOutPiFilter($event)" [checked]="PIFormTypeValue"></md-slide-toggle> <label style="line-height: 14px;">{{PIFormType}}</label></div>
+                </div>  
+                  <div class="form-group col-2">
+                        <div class="input-box">
+                            <md-select class="form-control range-select" #selectPiCompareRange (change)="onchangePiCompareRange(selectPiCompareRange)"
+                                formControlName="PIFilter" placeholder="{{'Comman.SelectRange' | translate}}">
+                                <md-option value="1">{{'Comman.Equalto' | translate }} </md-option>
+                                <md-option value="2">{{'Comman.NotEqualto' | translate }} </md-option>
+                                <md-option value="7">{{'Comman.Between' | translate }} </md-option>
+                            </md-select>
+                        </div>
+                        <div class="input-box number-field two-column-outer" *ngIf="MaxValues">
+                            <div class="valuemin">
+                                <md-input-container class="form-control">
+                                    <input mdInput type="number" min="0" formControlName="ComparePIFilterMin" max="100" placeholder="{{'Comman.Min' | translate}}">
+                                </md-input-container>
+                            </div>
+                            <div class="valuemax">
+                                <md-input-container class="form-control">
+                                    <input mdInput type="number" min="0" formControlName="ComparePIFilterMax" max="100" placeholder="{{'Comman.Max' | translate}}">
+                                </md-input-container>
+                            </div>
+                        </div>
+
+                        <div class="input-box number-field" *ngIf="!MaxValues">
+                            <div class="valuemin">
+                                <md-input-container class="form-control">
+                                    <input mdInput type="number" min="0" formControlName="ComparePIFilterMin" max="100" placeholder="{{'Comman.Min' | translate}}">
+                                </md-input-container>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="fieldgroup">
+                    <label>
+                        {{'Comman.DateandTime' | translate }}
+                    </label>
+                    <div class="form-group col-2">
+                        <div class="input-box">
+                            <md2-datepicker class="form-control" placeholder="DD/MM/YY" formControlName="fromDate" [openOnFocus]="true" [mode]="modeportrait"
+                                [startView]="startViewmonth" [type]="datetimetype" [touchUi]="true" [format]="formatDate" (change)="DateValidation(alertmd2dialog)"></md2-datepicker>
+                        </div>
+                        <div class="input-box">
+                            <md2-datepicker class="form-control" placeholder="DD/MM/YY" formControlName="toDate" [openOnFocus]="true" [mode]="modeportrait"
+                                [startView]="startViewmonth" [type]="datetimetype" [touchUi]="true" [format]="formatDate" [min]="fromDate" (change)="DateValidation(alertmd2dialog)"></md2-datepicker>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <md2-accordion class="filter-form-accordian">
+                <md2-accordion-tab>
+                    <md2-accordion-header>Form</md2-accordion-header>
+                    <div class="card filter-form-radio">
+                        <div class="fieldgroup status">
+                            <label>{{'Comman.Status' | translate }}</label>
+                            <md-radio-group formControlName="FormStatus">
+                                <md-radio-button value="All">{{'Comman.All' | translate }}</md-radio-button>
+                                <md-radio-button class="resolvedbox" value="Resolved">
+                                    {{'Comman.Resolved' | translate }}
+                                </md-radio-button>
+                                <md-radio-button class="mb-0 unresolvedbox" value="Unresolved">
+                                    {{'Comman.Unresolved' | translate }}
+                                </md-radio-button>
+                            </md-radio-group>
+                        </div>
+                    </div>
+                    <div class="card filter-form-radio">
+                        <div class="fieldgroup status">
+                            <label>{{'Comman.Read/Unread' | translate }} </label>
+                            <md-radio-group formControlName="FormReadUnread">
+                                <md-radio-button value="All">{{'Comman.All' | translate }}</md-radio-button>
+                                <md-radio-button value="Read">
+                                    {{'Comman.Read' | translate }}
+                                </md-radio-button>
+                                <md-radio-button class="mb-0" value="Unread">
+                                    {{'Comman.Unread' | translate }}
+                                </md-radio-button>
+                            </md-radio-group>
+                        </div>
+                    </div>
+                    <div *ngIf="InOutFormType" class="card filter-form-radio">
+                        <div class="fieldgroup">
+                            <label>
+                                {{'Comman.FormQuestion' | translate }}
+                            </label>
+                            <div class="formquestionrow">
+                                <div class="card filter-form-radio">
+                                    <div class="fieldgroup status">
+                                        <md-radio-group formControlName="FormType" (change)="onFormTypeChange($event)">
+                                            <md-radio-button value="In">{{InName}}</md-radio-button>
+                                            <md-radio-button class="mb-0" value="Out">{{OutName}}</md-radio-button>
+                                        </md-radio-group>
+                                    </div>
+                                </div>
+                                <div class="formquestionleft">
+                                    <md-select #mySelect placeholder="{{'Comman.SelectQuestion' | translate}}" formControlName="selectedFormQuestionValue">
+                                        <md-option *ngFor="let ques of FormQuestionList" [value]="ques.QuestionId">
+                                            {{ ques.QuestionName }}
+                                        </md-option>
+                                    </md-select>
+                                </div>
+                                <button type="button" md-raised-button class="btnlinks add" (click)="onAddFeedbackOrCaptureQuestionFilter(alertrequired)">Add</button>
+                            </div>
+                            <div class="new-form-question-box formquestionbox">
+                                <div formArrayName="questionLairs">
+                                    <div *ngFor="let question of GetFormArrayControls; let i=index" [formGroupName]="i">
+                                        <div *ngFor="let objectquestion of FilterQuestionList">
+                                            <span>{{objectquestion.QuestionName}}</span>
+                                            <div (click)="removeQuestion(objectquestion.QuestionId)" class="btnlinks remove"></div>
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 1)" class="form-group mb-3">
+                                                <div class="input-box">
+                                                    <input type="text" class="form-control" [formControlName]="objectquestion.QuestionId" placeholder="{{objectquestion.Hint}}"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 3 || objectquestion.QuestionTypeId === 12 || objectquestion.QuestionTypeId === 13)"
+                                                class="form-group mb-3">
+                                                <div class="input-box">
+                                                    <textarea class="form-control" [formControlName]="objectquestion.QuestionId" placeholder="{{objectquestion.Hint}}"></textarea>
+                                                </div>
+                                            </div>
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 4 || objectquestion.QuestionTypeId === 10 || objectquestion.QuestionTypeId == 11 || objectquestion.QuestionTypeId == 20 || objectquestion.QuestionTypeId == 24 || objectquestion.QuestionTypeId == 26)"
+                                                class="form-group mb-3">
+                                                <div class="input-box">
+                                                    <input type="text" class="form-control" [formControlName]="objectquestion.QuestionId" placeholder="{{objectquestion.Hint}}"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 5)">
+                                                <div class="card filter-form-select related-form-select">
+                                                    <div class="fieldgroup">
+                                                        <div class="selectpirow2">
+                                                            <div *ngFor="let option of filterOptionsOfQuestionType(objectquestion.QuestionId)">
+                                                                <label class="containerbox">
+                                                                    <input type="checkbox" [checked]="option.IsDefaultValue" (change)="onchangemultiplecheckbox($event, objectquestion.QuestionId)"
+                                                                        [id]="option.OptionId" [value]="option.OptionValue"> {{option.OptionName}}
+                                                                    <span class="checkmarkbox"></span>
+                                                                </label>
+                                                            </div>
+                                                            <input type="hidden" [formControlName]="objectquestion.QuestionId">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 6)" class="form-group mb-3 filter-form-radio">
+                                                <div class="input-box">
+                                                    <md-radio-group [formControlName]="objectquestion.QuestionId">
+                                                        <md-radio-button *ngFor="let options of filterOptionsOfQuestionType(objectquestion.QuestionId)" [value]="options.OptionValue">
+                                                            {{options.OptionName}}
+                                                        </md-radio-button>
+                                                    </md-radio-group>
+                                                </div>
+                                            </div>
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 7)" class="formquestionrow">
+                                                <div class="formquestionleft">
+
+                                                </div>
+                                            </div>
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 21)" class="form-group mb-3 filter-form-select">
+                                                <div class="input-box">
+                                                    <md2-select [formControlName]="objectquestion.QuestionId">
+                                                        <md2-option *ngFor="let options of filterOptionsOfQuestionType(objectquestion.QuestionId)" [value]="options.OptionValue">
+                                                            {{options.OptionName}}
+                                                        </md2-option>
+                                                    </md2-select>
+                                                </div>
+                                            </div>
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 18)" class="form-group mb-3 filter-form-select">
+                                                <div class="input-box">
+                                                    <md-select multiple [formControlName]="objectquestion.QuestionId">
+                                                        <md-option *ngFor="let options of filterOptionsOfQuestionType(objectquestion.QuestionId)" [value]="options.OptionValue">
+                                                            {{ options.OptionName }}
+                                                        </md-option>
+                                                    </md-select>
+                                                </div>
+                                            </div>
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 19)" class="form-group mb-3 clearfix">
+                                                <div class="input-box">
+                                                    <input type="number" [formControlName]="objectquestion.QuestionId" class="form-control" min="0" (keyup)="onchangeGetQyestionType(objectquestion.QuestionTypeId)"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 8)" class="form-group mb-3 clearfix">
+                                                <div class="input-box">
+                                                    <md2-datepicker class="form-control" [formControlName]="objectquestion.QuestionId" [openOnFocus]="true" [mode]="portrait"
+                                                        [startView]="startView8Type" [type]="datetype" [touchUi]="true" [format]="Question8Type">
+                                                    </md2-datepicker>
+                                                </div>
+                                            </div>
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 9)" class="form-group mb-3 clearfix">
+                                                <div class="input-box">
+                                                    <md2-datepicker class="form-control" [formControlName]="objectquestion.QuestionId" [openOnFocus]="true" [mode]="portrait"
+                                                        [startView]="startView9Type" [type]="timetype" [touchUi]="true" [format]="Question9Type">
+                                                    </md2-datepicker>
+                                                </div>
+                                            </div>
+                                            <div *ngIf="(objectquestion.QuestionTypeId === 22)" class="form-group mb-3 clearfix">
+                                                <div class="input-box">
+                                                    <md2-datepicker class="form-control" [formControlName]="objectquestion.QuestionId" [openOnFocus]="true" [mode]="portrait"
+                                                        [startView]="startView22Type" [type]="datetimetype" [touchUi]="true"
+                                                        [format]="Question22Type">
+                                                    </md2-datepicker>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card filter-form-select" *ngIf="IsCustomerType">
+                        <div class="fieldgroup">
+                            <div class="selectpirow2">
+                                <md-checkbox class="transfer" formControlName="FormResponseTypeCheckbox">
+                                    {{'Comman.MyInForm' | translate }}
+                                </md-checkbox>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card filter-form-select">
+                        <div class="fieldgroup">
+                            <div class="selectpirow2">
+                                <md-checkbox formControlName="FormRecursion">{{'Comman.Recursion' | translate }}</md-checkbox>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card filter-form-select" *ngIf="IsCustomerType">
+                        <div class="fieldgroup">
+                            <div class="selectpirow2">
+                                <md-checkbox formControlName="FormResend">{{'Comman.Resend' | translate }} </md-checkbox>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card filter-form-select">
+                        <div class="fieldgroup">
+                            <div class="selectpirow2">
+                                <md-checkbox formControlName="FormTransfer">
+                                    {{'Comman.Transfer' | translate }}
+                                </md-checkbox>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card filter-form-select">
+                        <div class="fieldgroup">
+                            <div class="selectpirow2">
+                                <md-checkbox formControlName="IsFlag">{{'Comman.Markasstar' | translate }}</md-checkbox>
+                            </div>
+                        </div>
+                    </div>
+                </md2-accordion-tab>
+            </md2-accordion>
+            <md2-accordion class="filter-form-accordian">
+                <md2-accordion-tab>
+                    <md2-accordion-header>Chat</md2-accordion-header>
+                    <div class="card filter-form-radio">
+                        <div class="fieldgroup status">
+                            <label>
+                                {{'controlLabel.ActionsChat' | translate }}
+                            </label>
+                            <div>
+                                <div class="fieldgroup establishment">
+                                    <md-select formControlName="FormActionTemplate" placeholder="{{'Comman.ActionResolutionTemplate' | translate}}">
+                                        <md-option>{{'Comman.None' | translate }}</md-option>
+                                        <md-option *ngFor="let template of ActionTemplateList" [value]="template.Value">
+                                            {{ template.Text }}
+                                        </md-option>
+                                    </md-select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card filter-form-select">
+                        <div class="fieldgroup">
+                            <div class="selectpirow2">
+                                <md-checkbox formControlName="FormUnreadChat">{{'Comman.UnreadChat' | translate }}</md-checkbox>
+                            </div>
+                        </div>
+                    </div>
+                </md2-accordion-tab>
+            </md2-accordion>
+        </form>
+    </div>
+    <div class="filter-form-btn">
+        <button type="submit" md-raised-button (click)="onFilterApply(alertrequired,0)" class="btn submit">{{'Comman.Apply' | translate }}</button>
+    </div>
+</div>
+<div class="sortingrow new-sorting-row">
+    <div class="search-box" *ngIf="show">
+        <form class="formblock">
+            <md-input-container>
+                <input name="TextSearch" (keyup)="applyFilter($event, alertrequired, 1)" mdInput placeholder="{{'Comman.Search' | translate}}"
+                    [(ngModel)]="TextSearch" type="text">
+            </md-input-container>
+            <div *ngIf="(TextSearch !='')" class="search-link" (click)="onFilterApply(alertrequired, 1)">Search</div>
+        </form>
+    </div>
+    <div class="recordrow">
+        <a (click)="OnRefreshList()" title="{{'tooltip.clicktorefresh' | translate}}" id="refreshFeedbacklist">
+            <i class="btnlinks icon-sync"></i>
+        </a>
+        <a (click)="OnClickDateTimeChange()" title="{{'tooltip.clicktochangedatetime' | translate}}">
+            {{DisplayfromDate | date: 'dd/MMM/yy HH:mm '}}
+            <strong> - </strong>{{DisplaytoDate | date: 'dd/MMM/yy HH:mm'}}
+        </a>
+    </div>
+    <div class="recordrow">
+        <div class="pullright recordright">
+            <div class="search-result">
+                <div *ngIf="(SearchText !='')" class="search-result-inner" (click)="toggle()">Search results :
+                    <b> {{TextSearch}}</b>
+                    <a class="clear-result" (click)="onClearTextSearch()">clear</a>
+                </div>
+            </div>
+            <md-checkbox *ngIf="acessremovefromstatistic" [checked]="SelectOneForm" [disabled]="NoDataDisplay" (change)="onSelectAllForms($event.checked)">{{'Comman.SelectAll' | translate}}</md-checkbox>
+            <md-slide-toggle title="{{'tooltip.ClicktoselectedFormsDisableorEnable' | translate }}" *ngIf="acessremovefromstatistic"
+                [disabled]="RemoveFromStatisticdisabled" (change)="onRemoveFromStatistics($event)">{{RemoveFromStatisticsLabel}}</md-slide-toggle>
+        </div>
+    </div>
+</div>
+<div class="mgcontentarea paddingnone feedlistblock feedbacklistblock">
+    <div class="feedlist">
+        <div (scroll)="onElementScroll($event.currentTarget)" class="feeddetails">
+            <div style="color: #000;background: #e4e4e4;padding: 4px 4px;border-radius: 4px;font-size: 17px;text-align: center;margin: 0 40%;"
+                class="capturerowgroup" *ngIf="NoDataDisplay">
+                {{ Displaylabel }}
+            </div>
+            <div class="capturerowgroup" *ngFor="let form of InOutFormList let i = index" [attr.data-index]="i">
+                <!-- OUTform details start-->
+                <div class="capturerow feedrow imageblur">
+                    <div class="capturetitlerow">
+                        <div class="feedbackstatus">
+                            <div>#{{form.ReportId}}</div>
+                            <div *ngIf="(form.StatusIconEstablishment)">
+                                <div *ngIf="(form.StatusImage != '')">
+                                    <a *ngIf="(StatusTimeSetting == 0)" (click)="OnClickStatusIcon(form.EncodeEstablishmentId,form.EncodeReportId,alertStatusIcon, form.StatusId)">
+                                        <img src="{{form.StatusImage}}" width="15" class="btnlinks">
+                                        <span>
+                                            {{form.StatusTime}}
+                                        </span>
+                                    </a>
+                                    <a *ngIf="(StatusTimeSetting == 1)" (click)="OnClickStatusIcon(form.EncodeEstablishmentId,form.EncodeReportId,alertStatusIcon,form.StatusId)">
+                                        <img src="{{form.StatusImage}}" width="15" class="btnlinks">
+                                        <span>
+                                            {{form.StatusCounter}}
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pullright reporticon">
+                            <a *ngIf="form.MobiFormLink" (click)="RedirectToMobi(form.MobiFormLink,form.IsReleased, form.IsMobiExpired, alertrequired,form.ReleaseDateValidationMessage, form.MobiExpiredValidationMessage,form.ReportId)" target="_blank">
+                                <i mdTooltip="{{'Comman.Clicktoopen' | translate}} {{InName}} {{'Comman.form' | translate}}." class="btnlinks icon-mobiform"></i>
+                            </a>
+                            <a (click)="ResendFormRequest(form.ReportId, alertResend)" *ngIf="form.IsResend">
+                                <i class="btnlinks icon-resend"></i>
+                            </a>
+                            <a *ngIf="ResolveAllRights" (click)="ResolveFormRequest(form.ReportId, form.Resolved, form.IsOut)">
+                                <i [ngStyle]="{'color': form.Resolved ? '#2cc56a' : '#989ba4'}" class="btnlinks {{form.IsOutStanding ? 'icon-singletick' : 'icon-twotick'}}"></i>
+                            </a>
+                            <i [ngStyle]="{'background': form.FormColor}" class="btnlinks icon-moreicn" [mdMenuTriggerFor]="capturelist"></i>
+                            <md-menu #capturelist="mdMenu" xPosition="before" class="feedlistmenu">
+                                <button *ngIf="!form.IsDisable" (click)="SnapshotDisplaySingleForm(form.EncodeReportId, form.EncodeActivityId, form.EstablishmentId, form.UserId, form.IsOut)"
+                                    style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                    <i class="btnlinks icon-snapshot"></i>
+                                    <span class="text-bottom">{{'controlLabel.Snapshot' | translate }}</span>
+                                </button>
+                                <button (click)="MapDisplaySingleForm(form.ReportId, form.IsOut)" *ngIf="form.Latitude !='0.00'" style="font-size: 14px;font-weight: 100;"
+                                    md-menu-item>
+                                    <i class="btnlinks icon-mapicn"></i>
+                                    <span class="text-bottom">{{'controlLabel.Maps' | translate }}</span>
+                                </button>
+                                <button (click)="RemoveRecursionFormRequest(form.ReportId, alertrequired)" *ngIf="form.IsRecursion" style="font-size: 14px;font-weight: 100;"
+                                    md-menu-item>
+                                    <i class="btnlinks icon-removerecor"></i>
+                                    <span class="text-bottom">{{'controlLabel.RemovefromRecursion' | translate }}</span>
+                                </button>
+                                <button *ngIf="!form.IsTransferred" (click)="openTransferDialog(form.ReportId, form.IsOut, form.UserId, transferdialog, alert)"
+                                    style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                    <i class="btnlinks icon-transfer"></i>
+                                    <span class="text-bottom">{{'controlLabel.Transfer' | translate }}</span>
+                                </button>
+                                <button (click)="CopyFormRequest(form.EncodeReportId, form.EncodeEstablishmentId, form.EncodeContactMasterId, form.EncodeHasContactGroup, form.EncodeContactGroupName)"
+                                    *ngIf="(form.IsOut && CaptureButtonDisplay)" style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                    <i class="btnlinks icon-copy"></i>
+                                    <span class="text-bottom">{{'controlLabel.Copy' | translate }}</span>
+                                </button>
+                                <button (click)="DeleteFormRequest(form.ReportId, form.IsOut, alertDelete)" *ngIf="allowdeleteform" style="font-size: 14px;font-weight: 100;"
+                                    md-menu-item>
+                                    <i class="btnlinks icon-deletetwo"></i>
+                                    <span class="text-bottom">{{'controlLabel.Trash' | translate }}</span>
+                                </button>
+                                <div *ngIf="form.IsFlag">
+                                    <button (click)="INOutFormFlagUpdate(form.ReportId, CurrentActivityTypeout, form.IsFlag)" style="font-size: 14px;font-weight: 100;border-bottom:0.5px solid #bbb"
+                                        md-menu-item>
+                                        <i class="feedbacklist-flag">
+                                            <img src="../assets/images/blue_line.png" width="15" class="btnlinks icon-deletetwo">
+                                        </i>
+                                        <span class="text-bottom">{{'controlLabel.MarkasUnstar' | translate }}</span>
+                                    </button>
+                                </div>
+                                <div *ngIf="!form.IsFlag">
+                                    <button (click)="INOutFormFlagUpdate(form.ReportId, CurrentActivityTypeout, form.IsFlag)" style="font-size: 14px;font-weight: 100;border-bottom:0.5px solid #bbb"
+                                        md-menu-item>
+                                        <i class="feedbacklist-flag">
+                                            <img src="../assets/images/blue_fill.png" width="15" class="btnlinks icon-deletetwo">
+                                        </i>
+                                        <span class="text-bottom">{{'controlLabel.Markasstar' | translate }}</span>
+                                    </button>
+                                </div>
+                                <div *ngIf="(form.StatusIconEstablishment)">
+                                <button *ngIf="(form.StatusImage != '')" (click)="IconMapDisplaySingleForm(form.ReportId, form.IsOut)" style="font-size: 14px;font-weight: 100; border-bottom:0.5px solid #bbb" md-menu-item>
+                                    <i class="feedbacklist-flag">
+                                        <img src="../assets/images/status_history@2x.png" width="15" class="btnlinks icon-deletetwo" style="margin: 0 0 4px 0px;">
+                                    </i>
+                                    <span class="text-bottom">Status History</span>
+                                </button>
+                               </div>
+                             
+                                    <button (click)="FormReadAuditlog(form.ReportId, form.IsOut)" style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                        <i class="feedbacklist-flag">
+                                            <img src="../assets/images/fromAuditlog.png" width="15" class="btnlinks icon-deletetwo" style="margin: 0 0 4px 0px;">
+                                        </i>
+                                        <span class="text-bottom">Read History </span>
+                                    </button>
+                               
+                            </md-menu>
+                        </div>
+                    </div>
+                    <div class="capturedescriptionrow">
+                        <div class="capturerow1">
+                            <i class="btnlinks {{form.IsOut ? 'icon-outicn' : 'icon-inicn'}} D--Feedbacklist"></i>
+                            <i *ngIf="form.ContactGroupName" class="btnlinks icon-groupsm D--FeedbacklistGroup"></i>
+                            <div class="pl" *ngIf="PIOUTStatus">
+                                <strong>{{'controlLabel.PI' | translate }}:</strong> {{form.EI}}
+                            </div>
+                            <div class="datetime">{{form.CaptureDate}}</div>
+                            <div class="pullright d-flex">
+                                <div class="checkboxdiv" *ngIf="acessremovefromstatistic">
+                                    <md-checkbox [checked]="SelectOneForm" (change)="onSelectFormStatistics(form.IsDisable, form.ReportId, form.IsOut)">{{'controlLabel.Removefromstatistics' | translate }}</md-checkbox>
+                                </div>
+                                <div class="flagdiv" *ngIf="form.IsFlag">
+                                    <img src="../assets/images/gray.png">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="feedblockrow" style="cursor: pointer;">
+                            <div title="{{'tooltip.Clicktoopenformdetail' | translate}}" (click)="gotoFeedbackDetails(form.FeedbackDetailUrl)">
+                                <div class="feedicon">
+                                    <i class="{{form.SmileType == 'Positive'  ? 'mg-smaily-icon4' : form.SmileType == 'Neutral' || form.EI == 'N/A' ? 'mg-smaily-icon3' : form.SmileType == 'Negative' ? 'mg-smaily-icon2' : 'mg-smaily-icon1'}}"></i>
+                                </div>
+                                <p class="username" *ngIf="form.ContactData != ''" >{{form.ContactData}}</p>
+                                <p class="username" *ngIf="form.ContactData == ''">{{form.UserName}}</p>
+                                <div [ngStyle]="{'font-weight': (form.IsOutStanding ? 'bold' : '')}">
+                                    <p style="white-space: pre-line;" *ngFor="let item of form.SummaryQuestionsList let j = index" [attr.data-index]="j">{{item}}</p>
+                                </div>
+                            </div>
+                            <div *ngIf="!form.HasRelevantForm" title="{{'tooltip.Clicktoopenformchat' | translate}}" (click)="RedirectToChat(form.EncodeReportId,form.EncodeModuleId,form.EncodeActivityId, form.ContactMasterId)"
+                                class="msgrow" [ngClass]="[hideToggle ? 'hide' : 'show']">
+                                <div class="feedicon">
+                                    <i class="btnlinks icon-chat"></i>
+                                    <div *ngIf="form.NotificationCount" class="btnlinks msgalert">{{form.NotificationCount}}</div>
+                                </div>
+                                <div *ngIf="form.LastChat">
+                                    <strong>{{form.LastChatBy}}</strong>&nbsp;
+                                    <span [innerHTML]="form.LastChat"></span>
+                                </div>
+                                <div *ngIf="!form.LastChat" style="color: #d8d8d8;">{{'Comman.NoActions' | translate}}.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- OUTFORM details END-->
+                <div *ngIf="form.HasRelevantForm" class="lightbluebg imageblur">
+                    <div class="captureconnect"></div>
+                    <!-- INFORM details start-->
+                    <div class="capturerow feedrow" *ngFor="let inform of form.RelevantInForms let k = index" [attr.data-index]="k">
+                        <div class="capturedescriptionrow">
+                            <div [ngClass]="{'disableDivFortender': form.IsGrayOut}" style="cursor: default;background: #e8eaf6;border-bottom: 0;text-align: left; padding-right:0px;" class="capturetitlerow d-flex justify-between">
+                                <div class="D--feedrow-id">
+                                    <span *ngIf="InFormRefNumber">#{{inform.ReportId}}</span>
+                                </div>
+                                <div class="pullright">
+                                    <i [ngStyle]="{'color': inform.FormColor, 'background': 'none'}" class="btnlinks icon-moreicn text-right" [mdMenuTriggerFor]="capturelist"></i>
+                                    <md-menu #capturelist="mdMenu" xPosition="before" class="feedlistmenu">
+                                        <button *ngIf="!inform.IsDisable" (click)="SnapshotDisplaySingleForm(inform.EncodeInReportId, inform.EncodeActivityId, inform.EstablishmentId, inform.UserId, inform.IsOut)"
+                                            style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                            <i class="btnlinks icon-snapshot"></i>
+                                            <span class="text-bottom">{{'controlLabel.Snapshot' | translate }}</span>
+                                        </button>
+                                        <button (click)="MapDisplaySingleForm(inform.ReportId, inform.IsOut)" *ngIf="inform.Latitude !='0.00'" style="font-size: 14px;font-weight: 100;"
+                                            md-menu-item>
+                                            <i class="btnlinks icon-mapicn"></i>
+                                            <span class="text-bottom">{{'controlLabel.Maps' | translate }}</span>
+                                        </button>
+                                        <!--<button (click)="MapDisplaySingleForm(inform.ReportId, inform.IsOut)" *ngIf="form.Latitude !='0.00'" style="font-size: 14px;font-weight: 100;"
+                                                        md-menu-item>
+                                                    <i class="btnlinks icon-mapicn"></i>
+                                                    <span class="text-bottom">Status Icon History Map</span>
+                                                </button>-->
+                                        <button *ngIf="!inform.IsTransferred" (click)="openTransferDialog(inform.ReportId, inform.IsOut, inform.UserId, transferdialog, alert)"
+                                            style="font-size: 14px;font-weight: 100;" md-menu-item>
+                                            <i class="btnlinks icon-transfer"></i>
+                                            <span class="text-bottom">{{'controlLabel.Transfer' | translate }}</span>
+                                        </button>
+                                        <button (click)="DeleteFormRequest(inform.ReportId, inform.IsOut, alertDelete)" *ngIf="allowdeleteform" style="font-size: 14px;font-weight: 100;"
+                                            md-menu-item>
+                                            <i class="btnlinks icon-deletetwo"></i>
+                                            <span class="text-bottom">{{'controlLabel.Trash' | translate }}</span>
+                                        </button>
+                                        <div *ngIf="inform.IsFlag">
+                                            <button (click)="INOutFormFlagUpdate(inform.ReportId, CurrentActivityTypeIN, inform.IsFlag)" style="font-size: 14px;font-weight: 100;"
+                                                md-menu-item>
+                                                <i class="feedbacklist-flag">
+                                                    <img src="../assets/images/blue_line.png" width="15" class="btnlinks icon-deletetwo">
+                                                </i>
+                                                <span class="text-bottom">{{'controlLabel.MarkasUnstar' | translate }}</span>
+                                            </button>
+                                        </div>
+                                        <div *ngIf="!inform.IsFlag">
+                                            <button (click)="INOutFormFlagUpdate(inform.ReportId, CurrentActivityTypeIN, inform.IsFlag)" style="font-size: 14px;font-weight: 100;"
+                                                md-menu-item>
+                                                <i class="feedbacklist-flag">
+                                                    <img src="../assets/images/blue_fill.png" width="15" class="btnlinks icon-deletetwo">
+                                                </i>
+                                                <span class="text-bottom">{{'controlLabel.Markasstar' | translate }}</span>
+                                            </button>
+                                        </div>
+
+                                    </md-menu>
+                                </div>
+                            </div>
+
+                            <div class="capturerow1">
+                                <i class="btnlinks icon-inicn D--Feedbacklist"></i>
+                                <div class="pl" *ngIf="PIINStatus" [ngClass]="{'blurDivFortender': form.IsGrayOut}">
+                                    <strong>{{'controlLabel.PI' | translate }}:</strong> {{inform.EI}}
+                                </div>
+                                <div class="datetime" [ngClass]="{'blurDivFortender': form.IsGrayOut}">{{inform.CaptureDate}}</div>
+                                <div class="pullright d-flex">
+                                    <div class="checkboxdiv" *ngIf="acessremovefromstatistic">
+                                        <md-checkbox [checked]="SelectOneForm" (change)="onSelectFormStatistics(inform.IsDisable, inform.ReportId, inform.IsOut)">{{'controlLabel.Removefromstatistics' | translate }}</md-checkbox>
+                                    </div>
+                                    <div class="flagdiv" *ngIf="inform.IsFlag">
+                                        <img src="../assets/images/gray.png">
+                                    </div>
+                                </div>
+                            </div>
+                            <div (click)="gotoFeedbackDetails(inform.FeedbackDetailUrl)" class="feedblockrow" style="cursor: pointer;">
+                                <div class="feedicon">
+                                    <i class="{{inform.SmileType == 'Positive'  ? 'mg-smaily-icon4' : inform.SmileType == 'Neutral' || inform.EI == 'N/A'? 'mg-smaily-icon3' : inform.SmileType == 'Negative' ? 'mg-smaily-icon2' : 'mg-smaily-icon1'}}"></i>
+                                </div>
+                                <p class="username" [ngClass]="{'blurDivFortender': form.IsGrayOut}" *ngIf="form.ContactData != ''" >{{inform.ContactData}}</p>
+                                <p class="username" [ngClass]="{'blurDivFortender': form.IsGrayOut}" *ngIf="form.ContactData == ''">{{inform.UserName}}</p>
+                                <div [ngStyle]="{'font-weight': (inform.IsOutStanding ? 'bold' : '')}" [ngClass]="{'blurDivFortender': form.IsGrayOut}">
+                                    <p *ngFor="let initem of inform.SummaryQuestionsList let h = index" [attr.data-index]="h">{{initem}}</p>
+                                </div>
+                                <div *ngIf="(form.RelevantInForms.length == k + 1)" title="{{'tooltip.Clicktoopenformchat' | translate}}" (click)="RedirectToChat(inform.EncodeReportId,inform.EncodeModuleId,inform.EncodeActivityId,form.ContactMasterId)"
+                                    class="msgrow" [ngClass]="[hideToggle ? 'hide' : 'show']">
+                                    <div class="feedicon" *ngIf="form.LastChat" >
+                                        <i class="btnlinks icon-chat"></i>
+                                        <div *ngIf="form.NotificationCount" class="btnlinks msgalert">{{inform.NotificationCount}}</div>
+                                    </div>
+                                    <div *ngIf="form.LastChat" >
+                                        <strong>{{form.LastChatBy}}</strong>&nbsp;
+                                        <span [innerHTML]="form.LastChat"></span>
+                                    </div>
+                                    <div *ngIf="!form.LastChat" style="color: #d8d8d8;">{{'Comman.NoActions' | translate}}.</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <!-- INFORM details End-->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="custom-width">
+    <md2-dialog #alertStatusIcon>
+        <md2-dialog-title>{{'Comman.SatutsIconList' | translate}}</md2-dialog-title>
+        <h6 [innerHTML]="dialogalertmessage"></h6>
+        <md2-dialog-footer class="p-0 mrt-40">
+            <div class="activity-popup-Statu">
+                <div class="activdashboarbody table-design-custom">
+                    <table cellpadding="0" class="table">
+                        <tbody>
+                            <tr>
+                                <th>{{'Comman.Image' | translate}}</th>
+                                <th>{{'Comman.Name' | translate}}</th>
+                                <th>{{'Comman.Action' | translate}}</th>
+                            </tr>
+                            <tr mdbTableCol *ngFor="let obj of GetAllEstablishmentStatusIcon let i = index" [attr.data-index]="i" class="notificationflaglist">
+                                <td *ngIf="!obj.CurrentStatusId">
+                                    <img src="{{obj.StatusImage}}" width="15" class="btnlinks" style="margin-left: 22px;">
+                                </td>
+                                <td *ngIf="obj.CurrentStatusId" style="opacity: 0.7;cursor: none">
+                                    <img src="{{obj.StatusImage}}" width="15" class="btnlinks" style="margin-left: 22px;">
+                                </td>
+                                <td *ngIf="!obj.CurrentStatusId">{{obj.StatusName}} </td>
+                                <td *ngIf="obj.CurrentStatusId" style="opacity: 0.7;cursor: none">{{obj.StatusName}} </td>
+                                <td *ngIf="!obj.CurrentStatusId">
+                                    <input type="radio" name="radiogroup" value="{{obj.StatusId}}" id='{{obj.StatusName}}' (change)="OnchangeStatusIcon($event,alertStatusClearall)">
+                                </td>
+                                <td *ngIf="obj.CurrentStatusId">
+                                    <input disabled type="radio" name="radiogroup" style="cursor: none" value="{{obj.StatusId}}" id='{{obj.StatusName}}' (change)="OnchangeStatusIcon($event,alertStatusClearall)">
+                                </td>
+                            </tr>
+                            <!-- <tr *ngIf="Datas">
+                               <td colspan="3">No data avalible</td>
+                            </tr> -->
+                        </tbody>
+                    </table>
+                    <md2-dialog #alertStatusClearall>
+                        <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+                        <h6>{{Message}}</h6>
+                        <md2-dialog-footer>
+                            <div class="actionbtn textcenter marginnone">
+                                <a class="btn submit" (click)="ConfiormChangeStatusIconyes(alertStatusClearall, alertStatusIcon)">{{'Comman.Yes' | translate}}</a>
+                                <a class="btn submit" (click)="closemd2dialogStatus(alertStatusClearall)">{{'Comman.No' | translate}}</a>
+                            </div>
+                        </md2-dialog-footer>
+                    </md2-dialog>
+                </div>
+            </div>
+
+        </md2-dialog-footer>
+    </md2-dialog>
+</div>
+<md2-dialog #alertmd2dialog>
+    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+    <h6 [innerHTML]="dialogalertmessage"></h6>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a mdinput class="btn submit" (click)="closemd2dialog(alertmd2dialog)">{{'Comman.Ok' | translate}}</a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
+<md2-dialog #alertrequired>
+    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+    <h6 [innerHTML]="dialogalertmessage"></h6>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a mdinput class="btn submit" (click)="closemd2dialog(alertrequired)">{{'Comman.Ok' | translate}}</a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
+<md2-dialog #alertClearall>
+    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+    <h6>{{'messageComman.Wouldyouliketoclearthefilters' | translate}}</h6>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a class="btn submit" (click)="ClearallFilterConfirmation(alertClearall)">{{'Comman.Yes' | translate}}</a>
+            <a class="btn submit" (click)="closemd2dialog(alertClearall)">{{'Comman.No' | translate}}</a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
+<md2-dialog #alertDelete>
+    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+    <h6 [innerHTML]="dialogalertmessage"></h6>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a class="btn submit" (click)="DeleteFormConfirmation(alertDelete)">{{'Comman.Yes' | translate}}</a>
+            <a class="btn submit" (click)="closemd2dialog(alertDelete)">{{'Comman.No' | translate}}</a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
+<md2-dialog #alertResend>
+    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+    <h6 [innerHTML]="dialogalertmessage"></h6>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a class="btn submit" (click)="ResendFormConfirmation(alertrequired, alertResend)">{{'Comman.Yes' | translate}}</a>
+            <a class="btn submit" (click)="closemd2dialog(alertResend)">{{'Comman.No' | translate}}</a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
+<md2-dialog #alertTransfer>
+    <md2-dialog-title>{{dialogalertdeader}}</md2-dialog-title>
+    <h6 [innerHTML]="dialogalertmessage"></h6>
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a class="btn submit" (click)="TransferFormConfirmation(alertrequired, alertTransfer, transferdialog)">{{'Comman.Yes' | translate}}</a>
+            <a class="btn submit" (click)="closemd2dialog(alertTransfer)">{{'Comman.No' | translate}}</a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
+<md2-dialog #transferdialog>
+    <md2-dialog-title>{{'controlLabel.TransferForm' | translate }}</md2-dialog-title>
+    <div class="attachmentpopup">
+        <form class="formblock" style="max-height: 260px;overflow-y: auto;margin: 0 -5px; min-width:300px;">
+            <div class="row transfer">
+                <div class="fieldgroup">
+                    <ul>
+                        <li>
+                            <h6>{{'placeholder.SelectEstablishment' | translate}}</h6>
+                        </li>
+                        <li>
+                            <select (change)="onChangeTransferEstablishmentId($event)" name="TransferEstablishment" [(ngModel)]="TransferEstablishment"
+                                placeholder="Select Establishmen">
+                                <option *ngFor="let establishment of EstablishmentList" [value]="establishment.Value">
+                                    {{ establishment.Text }}
+                                </option>
+                            </select>
+                        </li>
+                    </ul>
+                </div>
+                <div class="fieldgroup">
+                    <ul>
+                        <li>
+                            <h6>{{UserListDisplayName}}</h6>
+                        </li>
+                        <li>
+                            <select (blur)="onChangeTransferEstablishmentId($event)" name="TransferApplicationUsers" [(ngModel)]="TransferApplicationUsers"
+                                placeholder="Select User">
+                                <option *ngFor="let user of TransferApplicationUserList" [value]="user.Value">
+                                    {{ user.Text }}
+                                </option>
+                            </select>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <md2-dialog-footer>
+        <div class="actionbtn textcenter marginnone">
+            <a (click)="TransferFormRequest(currentFormReportid, currentFormIsOut, alertTransfer)" class="btn submit">{{'controlLabel.Transfer' | translate }}</a>
+        </div>
+    </md2-dialog-footer>
+</md2-dialog>
