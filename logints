@@ -1,0 +1,214 @@
+import { Component } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { MdDialog } from '@angular/material';
+import { APIService } from '../services/APIService';
+import { AppComponent } from '../app.component';
+import { Md2Dialog } from 'md2';
+import { Password } from '../Password';
+import { TranslateService } from 'ng2-translate/ng2-translate';
+import { MessageService } from '../services/MessageService'
+@Component({
+    selector: 'login',
+    templateUrl: '../template/login.html',
+    providers: [APIService, Md2Dialog, MessageService, TranslateService]
+})
+
+export class Login {
+    public requiredvalidatormsg: string = '';
+    model: any = {};
+    loader: any = {};
+    loading = false;
+    returnUrl: string;
+    url: string = '';
+    lastDialogResult: string;
+    LoginLogo: string = 'assets/images/mg-logo-white.png';
+    ClientName: string = '';
+    LoginFlag: string = '';
+
+    constructor(
+        public dialog: MdDialog,
+        private appc: AppComponent,
+        private activatedRoute: ActivatedRoute,
+        private apiservice: APIService,
+        private router: Router,
+        private translate: TranslateService,
+        private messageService: MessageService) {
+        this.ClientName = JSON.parse(localStorage.getItem('ClientName'));
+        this.LoginFlag = JSON.parse(localStorage.getItem('loginFlag'));
+        this.LoginLogo = this.appc.LoginBackGround;
+        this.appc.IsAreaManager = false;
+        this.translate.addLangs(["en", "es"])
+        let language = localStorage.getItem('language');
+        this.translate.setDefaultLang(language);
+        this.translate.use(language);
+        this.apiservice.SetAPIUrl();
+        
+        this.appc.WebAppBackGround = 'url(' + this.apiservice.GetWebBackgroundThem() + ') no-repeat center top';
+        setTimeout(() => {
+            this.apiservice.GetAPI('api/v1/Login/GetBasicClientSetUpDetails').subscribe(
+                data => {
+                    localStorage.setItem('loginFlag', data.Result.LoginFlag);
+                    localStorage.setItem('language', data.Result.language)
+                    let language = localStorage.getItem('language');
+                    this.translate.setDefaultLang(language);
+                    this.translate.use(language);
+                })
+        }, 100);
+    }
+
+    openDialog() {
+        this.translate.addLangs(["en", "es"])
+        let language = localStorage.getItem('language');
+        this.translate.setDefaultLang(language);
+        this.translate.use(language);
+        this.dialog.open(DialogForgot);
+    }
+
+    ngAfterViewInit() {
+        this.appc.WebAppVersion = this.apiservice.GetWebAppVersion();
+    }
+
+    onLogin(alertdialog: Md2Dialog) {
+        try {
+            //localStorage.clear();
+            sessionStorage.clear();
+            if (this.model.username === undefined) {
+
+                this.requiredvalidatormsg = this.messageService.loginMessage(4) //  'Please enter Username.';
+                alertdialog.open();
+                return false;
+            }
+            if (this.model.password === undefined) {
+                this.requiredvalidatormsg = this.messageService.loginMessage(5) //  'Please enter Password.';
+                alertdialog.open();
+                return false;
+            }
+            this.appc.isLoading = true;
+            let LoginRequest = {
+                Username: this.model.username,
+                Password: this.model.password
+            }
+            this.apiservice.PostAPIWithObject('api/v1/Login/LoginUser', LoginRequest).subscribe(
+                data => {
+                    try {
+                        if (data.Status === 'Success') {
+                            localStorage.setItem('loginFlag', this.LoginFlag);
+                            this.appc.WebAppVersion = this.apiservice.GetWebAppVersion();
+                            this.apiservice.SetCurrentLoginToken(this.model.username);
+                            this.apiservice.SetUserInfo(data.Result);
+                            this.apiservice.SetAutoSaveOnOff(data.Result.AutoSaveOnOff);
+                            this.appc.LoginBackGround = this.apiservice.GetLoginLogo();
+                            this.appc.WebAppBackGround = 'url(' + this.apiservice.GetWebBackgroundThem() + ') no-repeat center top';
+                            this.appc.FooterBackground = this.apiservice.GetFooterBackground();
+                            this.appc.currentUser = this.apiservice.GetCurrentUser();
+                            this.appc.isLogin = true;
+                            this.appc.IsAreaManager = this.apiservice.GetUserIsAreaManager();
+                            let currenAppUserId: number = this.apiservice.GetUserId();
+                            this.appc.asyncGetNotification();
+                            this.translate.addLangs(["en", "es"]);
+                            localStorage.setItem('loginFlag', data.Result.LoginFlag);
+                            localStorage.setItem('language', data.Result.LanguageName)
+                            let language = localStorage.getItem('language');
+                            this.translate.setDefaultLang(language);
+                            this.translate.use(language);
+                            this.appc.IsDefaultContact = this.apiservice.GetIsDefaultContact();
+                            this.router.navigate(['activities']);
+                        } else {
+                            this.requiredvalidatormsg = data.Message;
+                            this.ClientName = this.apiservice.GetClientName();
+                            alertdialog.open();
+                            this.appc.isLoading = false;
+                            return false;
+                        }
+                    } catch (error) {
+                        this.requiredvalidatormsg = this.messageService.loginMessage(1) // 'Unable to verify user credentials. Contact your system administrator.';
+                        alertdialog.open();
+                        this.appc.isLoading = false;
+                        console.warn(error);
+                        return false;
+                    }
+                },
+                err => {
+                    this.requiredvalidatormsg = this.messageService.loginMessage(1) // 'Unable to verify user credentials. Contact your system administrator.';
+                    alertdialog.open();
+                    this.appc.isLoading = false;
+                    return false;
+                }
+            );
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+    closemd2dialog(alertdialog: Md2Dialog) {
+        alertdialog.close();
+    }
+}
+
+@Component({
+    selector: 'dialog-overview-example-dialog',
+    templateUrl: '../template/forgot.html',
+    providers: [APIService, Md2Dialog, MessageService, TranslateService]
+})
+export class DialogForgot {
+    requiredvalidatormsg: string = '';
+    dialogalertdeader: string = '';
+    url: string = '';
+    objAPiData = new Password('', '', '', '');
+    ClientName: string;
+    constructor(
+        public dialog: MdDialog,
+        private _dialog: MdDialog,
+        private activatedRoute: ActivatedRoute,
+        private router: Router,
+        private apiservice: APIService,
+        private translate: TranslateService,
+        private messageService: MessageService) {
+        this.ClientName = JSON.parse(localStorage.getItem('ClientName'));
+        let language = localStorage.getItem('language');
+        this.translate.setDefaultLang(language);
+        this.translate.use(language);
+    }
+
+
+    ForgotPassword(obj: any, alertsave: Md2Dialog, alertsaveSuccess: Md2Dialog) {
+        if (obj.email.length == 0) {
+            this.requiredvalidatormsg = this.messageService.ContactvalidationMessage(3) //'Please enter Email address.';
+            alertsave.open();
+            return false;
+        }
+
+        this.url = 'api/v1/Login/ForgotPassword?emailAddress=' + this.apiservice.EncodeHex(obj.email);
+        this.apiservice.GetAPI(this.url).subscribe(
+            data => {
+                if (data.Status === 'Success') {
+                    if (data.Result != null && data.Result.length !== 0) {
+                        this.requiredvalidatormsg = this.messageService.loginapimessage(data.Message);
+                        alertsaveSuccess.open();
+                    }
+                } else {
+                    this.requiredvalidatormsg = this.messageService.loginapimessage(data.Message);
+                    alertsave.open();
+                }
+            },
+            err => {
+                alert(err.Message);
+            }
+        );
+    }
+
+    CloseDiglog() {
+        let language = localStorage.getItem('language');
+        this.translate.setDefaultLang(language);
+        this.translate.use(language);
+        this.dialog.closeAll();
+    }
+
+    closemd2dialog() {
+        let language = localStorage.getItem('language');
+        this.translate.setDefaultLang(language);
+        this.translate.use(language);
+        this.dialog.closeAll();
+    }
+
+    // tslint:disable-next-line:eofline
+}
