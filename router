@@ -1,0 +1,268 @@
+import { BrowserModule, Title } from '@angular/platform-browser';
+import { NgModule, ApplicationRef } from '@angular/core';
+import { LocationStrategy, PathLocationStrategy } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Routes, RouterModule } from '@angular/router';
+import { JsonpModule } from '@angular/http';
+import { BrowserAnimationsModule, NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MaterialModule, MdInputModule, MdNativeDateModule } from '@angular/material';
+import { MdDataTableModule } from 'ng2-md-datatable';
+import { PageSliderModule } from 'ng2-page-slider';
+import 'hammerjs';
+import { AngularMultiSelectModule } from './multiselectdropdown/multiselect.component';
+import { TagInputModule } from 'ng2-tag-input';
+import { Md2Module } from 'md2';
+import { PipeModule } from './PipeModule';
+import { MentionModule } from 'angular-mentions/mention';
+import { LinkifyPipe } from './linkify.pipe';
+import { TabModule } from 'angular-tabs-component';
+import { TabsModule } from 'ngx-bootstrap';
+import { TabsetConfig,TabsetComponent } from 'ngx-bootstrap/tabs';
+import { ProgressbarConfig, ProgressbarModule } from 'ngx-bootstrap/progressbar';
+import { DndModule } from 'ng2-dnd';
+import { PerfectScrollbarModule } from 'angular2-perfect-scrollbar';
+import { PerfectScrollbarConfigInterface } from 'angular2-perfect-scrollbar'
+const PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
+  suppressScrollX: true
+};
+
+declare var require: any;
+export function highchartsFactory() {
+  const hc = require('highcharts');
+  const st = require('highcharts/modules/stock');
+  st(hc);
+  return hc;
+}
+
+import { SignaturePadModule } from 'angular2-signaturepad';
+import { SignatureFieldComponent } from './signature-field/signature-field.component';
+import { AgmCoreModule } from '@agm/core';
+import { MessageService } from './services/MessageService';
+import { AuthGuard, CheckAnyUserActive } from './services/auth.guard';
+import { AppComponent, DialogContent } from './app.component';
+import { Home } from './typescript/index';
+import { Login, DialogForgot } from './typescript/login';
+import { mainlogin } from './typescript/mainlogin';
+import { AzureLogin } from './typescript/Home';
+import { Activities, DialogChangePassowrd, DialogDashboard, WebVersiondialog } from './typescript/activities';
+import { Contactus } from './typescript/contactus';
+import { DefaultContact } from './typescript/defaultcontact';
+import { ContactFilterPipe } from './typescript/defaultcontact';
+import { Dashboard } from './typescript/dashboard';
+import { DashboardStartUs } from './typescript/dashboardstartus';
+import { DashboardTellUs } from './typescript/dashboardtellus';
+import { SelectEstablishment } from './typescript/selectestablishment';
+import { EstablishmentSearchPipe } from './typescript/selectestablishment';
+import { SelectContact } from './typescript/selectcontact';
+import { ContactSearchPipe } from './typescript/selectcontact';
+import { AddContact } from './typescript/addcontact';
+import { AddGroup } from './typescript/addgroup';
+import { Capture } from './typescript/capture';
+import { CaptureCopyEdit } from './typescript/capturecopyedit';
+import { Notifications } from './typescript/notifications';
+import { NotifySetting } from './typescript/notificationsetting';
+import { Lastdaysetting } from './typescript/lastdaysetting';
+import { Icondisplaysetting } from './typescript/icondisplaysetting';
+import { Draft } from './typescript/draft';
+import { ImportContactstep1 } from './typescript/importcontactstep1';
+import { ImportContactstep2 } from './typescript/importcontactstep2';
+import { DashboardAnalysis } from './typescript/dashboardanalysis';
+import { SelectUsers } from './typescript/selectusers';
+import { ItemView } from './typescript/itemview';
+import { TableView } from './typescript/tableview';
+import { TimeAnalytics } from './typescript/timeanalytics';
+import { FeedbackList } from './typescript/feedbacklist';
+import { FormMapDisplay } from './typescript/formmapdisplay';
+import { StatusIconHistoryMap } from './typescript/statusiconhistorymap';
+import { FeedbackDetail } from './typescript/feedbackdetail';
+import { Chat } from './typescript/chat';
+import { Snapshot } from './typescript/snapshot';
+import { SnapshotForm } from './typescript/snapshotform';
+import { ItemViewGraph } from './typescript/itemviewgraph';
+import { TableViewGraph } from './typescript/tableviewgraph';
+import { ActivityBarometer } from './typescript/activitybarometer';
+import { TimeAnalyticsGraph } from './typescript/timeanalyticsgraph';
+import { DatabaseReference } from './typescript/databasereference';
+import { ResendUnresolved } from "./typescript/ResendUnresolved";
+import { FormReadLog } from './typescript/FormReadLog';
+import { FromReadLogHistory } from './typescript/FromReadLogHistory';
+import { TaskActivityGridandList} from './typescript/TaskActivityGridandList';
+import { TaskMobiList} from './typescript/TaskMobiList';
+import { TaskMobiDetail} from './typescript/TaskMobiDetail';
+import { TaskAllocation} from './typescript/TaskAllocation';
+import { ChartsModule } from 'ng2-charts/ng2-charts';
+import { Http, HttpModule } from '@angular/http';
+import { TranslateModule, TranslateLoader } from 'ng2-translate/ng2-translate';
+import { TranslateHttpLoader } from "@ngx-translate/http-loader";
+import { APIService } from './services/APIService';
+import { TooltipModule } from 'ngx-bootstrap/tooltip';
+
+const routes: Routes = [
+  { path: 'contactus', component: Contactus, data: { title: 'Contact Us - Magnitude' } },
+  { path: 'home', component: Home, data: { title: 'Welcome to Magnitude' } },
+  { path: 'Home/:Id', component: AzureLogin, data: { title: 'Home - Magnitude' } },
+  { path: '', component: mainlogin, data: { title: 'Signin - Magnitude' }, canActivate: [CheckAnyUserActive] },
+  { path: 'login', component: Login, data: { title: 'Signin - Magnitude' }, canActivate: [CheckAnyUserActive] },
+  { path: 'activities', component: Activities, data: { title: 'Activities - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'defaultcontact', component: DefaultContact, data: { title: 'Default Contact - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'dashboard', component: Dashboard, data: { title: 'Dashboard - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'dashboardstartus', component: DashboardStartUs, data: { title: 'DashboardStartUs - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'dashboardtellus', component: DashboardTellUs, data: { title: 'DashboardTellUs - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'selectestablishment', component: SelectEstablishment, data: { title: 'SelectEstablishment - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'selectcontact', component: SelectContact, data: { title: 'SelectContact - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'addcontact', component: AddContact, data: { title: 'AddContact - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'capture', component: Capture, data: { title: 'Capture - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'capturecopyedit', component: CaptureCopyEdit, data: { title: 'CaptureCopyEdit - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'addgroup', component: AddGroup, data: { title: 'AddGroup - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'notifysetting', component: NotifySetting, data: { title: 'NotifySetting - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'ResendUnresolved', component: ResendUnresolved, data: { title: 'Resend - Unresolved - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'lastdaysetting', component: Lastdaysetting, data: { title: 'LastDaysSetting - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'icondisplaysetting', component: Icondisplaysetting, data: { title: 'IconDisplaySetting - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'notifications', component: Notifications, data: { title: 'Notifications - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'draft', component: Draft, data: { title: 'Draft - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'importcontactstep1', component: ImportContactstep1, data: { title: 'ImportContactstep1 - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'importcontactstep2', component: ImportContactstep2, data: { title: 'ImportContactstep2 - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'dashboardanalysis', component: DashboardAnalysis, data: { title: 'Dashboard Analysis - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'selectusers', component: SelectUsers, data: { title: 'Select Users - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'itemview', component: ItemView, data: { title: 'Item View - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'tableview', component: TableView, data: { title: 'Table View - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'feedbacklist', component: FeedbackList, data: { title: 'Feedback List - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'formmapdisplay', component: FormMapDisplay, data: { title: 'Form Map Display - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'statusiconhistorymap', component: StatusIconHistoryMap, data: { title: 'Icon Map Display - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'FormReadLog', component: FormReadLog, data: { title: 'Form Read Log - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'FromReadLogHistory', component: FromReadLogHistory, data: { title: 'Form Read Log History - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'feedbackdetail', component: FeedbackDetail, data: { title: 'Feedback Detail - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'chat', component: Chat, data: { title: 'Chat - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'snapshotgraph', component: Snapshot, data: { title: 'Snapshot - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'snapshotgraphform', component: SnapshotForm, data: { title: 'Snapshot Form - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'itemviewgraph', component: ItemViewGraph, data: { title: 'Item View Graph - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'tableviewgraph', component: TableViewGraph, data: { title: 'Table View Graph - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'activitybarometer', component: ActivityBarometer, data: { title: 'Activity Barometer - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'timeanalytics', component: TimeAnalytics, data: { title: 'Time Analytics - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'timeanalyticsgraph', component: TimeAnalyticsGraph, data: { title: 'Time Analytics Graph - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'databasereference', component: DatabaseReference, data: { title: 'Database Reference - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'TaskAllocation', component: TaskAllocation, data: { title: 'Database Reference - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'TaskActivityGridandList', component: TaskActivityGridandList, data: { title: 'Database Reference - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'TaskMobiList', component: TaskMobiList, data: { title: 'Database Reference - Magnitude' }, canActivate: [AuthGuard] },
+  { path: 'TaskMobiDetail', component: TaskMobiDetail, data: { title: 'Database Reference - Magnitude' }, canActivate: [AuthGuard] },
+  { path: '**', redirectTo: '' }
+];
+
+export function HttpLoaderFactory(http: Http) {
+  return new TranslateHttpLoader(http, "i18n/", ".json");
+}
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    DialogContent,
+    Home,
+    AzureLogin,
+    mainlogin,
+    Login,
+    DialogForgot,
+    WebVersiondialog,
+    Activities,
+    DialogChangePassowrd,
+    DialogDashboard,
+    Contactus,
+    DefaultContact,
+    ContactFilterPipe,
+    Dashboard,
+    DashboardStartUs,
+    DashboardTellUs,
+    SelectContact,
+    ContactSearchPipe,
+    AddContact,
+    AddGroup,
+    Capture,
+    TaskAllocation,
+    CaptureCopyEdit,
+    Notifications,
+    NotifySetting,
+    Lastdaysetting,
+    Icondisplaysetting,
+    Draft,
+    SelectEstablishment,
+    EstablishmentSearchPipe,
+    ImportContactstep1,
+    ImportContactstep2,
+    DashboardAnalysis,
+    SelectUsers,
+    ItemView,
+    TableView,
+    TimeAnalytics,
+    FeedbackList,
+    FormMapDisplay,
+    StatusIconHistoryMap,
+    FormReadLog,
+    FromReadLogHistory,
+    FeedbackDetail,
+    Chat,
+    Snapshot,
+    SnapshotForm,
+    ItemViewGraph,
+    TableViewGraph,
+    ActivityBarometer,
+    TimeAnalyticsGraph,
+    DatabaseReference,
+    SignatureFieldComponent,
+    LinkifyPipe,
+    ResendUnresolved,
+    TaskActivityGridandList,
+    TaskAllocation,
+    TaskMobiList,
+    TaskMobiDetail
+    
+  ],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot(routes),
+    BrowserAnimationsModule,
+    NoopAnimationsModule,
+    FormsModule,
+    ReactiveFormsModule,
+    JsonpModule,
+    HttpModule,
+    MaterialModule,
+    MdInputModule,
+    MdNativeDateModule,
+    MdDataTableModule,
+    PageSliderModule,
+    AngularMultiSelectModule,
+    TagInputModule,
+    Md2Module,
+    PipeModule.forRoot(),
+    TranslateModule.forRoot(),
+    MentionModule,
+    ChartsModule,
+    SignaturePadModule,
+    TabsModule,
+    ProgressbarModule,
+    TooltipModule.forRoot(),
+    DndModule.forRoot(),
+    AgmCoreModule.forRoot({
+      apiKey: 'AIzaSyDDDJvqglIden-MTYh1SQl-F-Ee8xS-1aY'
+    }),
+    PerfectScrollbarModule.forRoot(PERFECT_SCROLLBAR_CONFIG)
+  ],
+  providers: [
+    AuthGuard,
+    CheckAnyUserActive,
+    MessageService,
+    APIService,
+    TabsetConfig,
+    ProgressbarConfig,
+    Title,
+    { provide: LocationStrategy, useClass: PathLocationStrategy },
+    { provide: TranslateLoader, useFactory: HttpLoaderFactory, deps: [Http] },
+    
+  ],
+  entryComponents: [AppComponent, DialogContent, DialogForgot, WebVersiondialog, DialogChangePassowrd, DialogDashboard, TabsetComponent],
+})
+
+export class AppModule {
+  ngDoBootstrap(appRef: ApplicationRef) {
+    appRef.bootstrap(AppComponent);
+  }
+}
